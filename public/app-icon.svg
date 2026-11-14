@@ -1,0 +1,28 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Basic French logo" role="img">
+  <defs>
+    <linearGradient id="frEmblemBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="55%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="frGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="60%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#frEmblemBg)" stroke="rgba(255,255,255,0.24)" stroke-width="1.5"/>
+  <!-- French Tricolor Ribbon Accent in Top Corner -->
+  <g transform="translate(6, 6)">
+    <rect x="0" y="0" width="3.3" height="7" rx="0.8" fill="#002395"/>
+    <rect x="3.5" y="0" width="3.3" height="7" rx="0.4" fill="#ffffff"/>
+    <rect x="7" y="0" width="3.3" height="7" rx="0.8" fill="#ED2939"/>
+  </g>
+  <!-- Graduation Cap School Crest -->
+  <g transform="translate(0, 3)">
+    <path d="M24 13L8 20.5L24 28L40 20.5L24 13Z" fill="url(#frGoldGrad)"/>
+    <path d="M14 24.5V32C14 35.5 18 38 24 38C30 38 34 35.5 34 32V24.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M40 21V30.5" stroke="url(#frGoldGrad)" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="40" cy="31.5" r="1.5" fill="url(#frGoldGrad)"/>
+  </g>
+</svg>

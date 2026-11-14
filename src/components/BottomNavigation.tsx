@@ -1,0 +1,56 @@
+import React from 'react';
+import { FaFont, FaComment, FaListUl, FaCalculator, FaQuestionCircle } from 'react-icons/fa';
+
+interface BottomNavigationProps {
+  activeSection: string;
+  setActiveSection: (section: string) => void;
+}
+
+const BottomNavigation: React.FC<BottomNavigationProps> = ({
+  activeSection,
+  setActiveSection,
+}) => {
+  const navItems = [
+    { id: 'alphabet', label: 'Alphabet', icon: <FaFont /> },
+    { id: 'phrases', label: 'Phrases', icon: <FaComment /> },
+    { id: 'words', label: 'Words', icon: <FaListUl /> },
+    { id: 'numbers', label: 'Numbers', icon: <FaCalculator /> },
+    { id: 'quiz', label: 'Quiz', icon: <FaQuestionCircle /> },
+  ];
+
+  const isActive = (id: string) =>
+    id === 'numbers'
+      ? activeSection === 'numbers' || activeSection === 'time'
+      : activeSection === id;
+
+  const handleNavClick = (id: string) => {
+    const element = document.querySelector(`.bottom-nav-item[data-section="${id}"]`);
+    if (element) {
+      element.classList.add('nav-click-effect');
+      setTimeout(() => {
+        element.classList.remove('nav-click-effect');
+      }, 200);
+    }
+    setActiveSection(id);
+  };
+
+  return (
+    <nav className="bottom-navigation" aria-label="Bottom navigation">
+      {navItems.map(item => (
+        <button
+          key={item.id}
+          type="button"
+          className={`bottom-nav-item ${isActive(item.id) ? 'active' : ''}`}
+          onClick={() => handleNavClick(item.id)}
+          aria-label={`Switch to ${item.label} section`}
+          data-section={item.id}
+        >
+          <div className="bottom-nav-icon">{item.icon}</div>
+          <span className="bottom-nav-label">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+};
+
+export default BottomNavigation;

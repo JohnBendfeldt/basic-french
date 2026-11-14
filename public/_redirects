@@ -1,0 +1,14 @@
+# Force HTTPS and canonical basicfrench.org domain
+http://basicfrench.org/* https://basicfrench.org/:splat 301!
+http://www.basicfrench.org/* https://basicfrench.org/:splat 301!
+https://www.basicfrench.org/* https://basicfrench.org/:splat 301!
+
+# Static legal & SEO files
+/sitemap.xml /sitemap.xml 200
+/privacy /privacy/index.html 200
+/terms /terms/index.html 200
+/.well-known/microsoft-identity-association /well-known/microsoft-identity-association.json 200!
+/.well-known/* /well-known/:splat 200!
+
+# SPA fallback
+/* /index.html 200

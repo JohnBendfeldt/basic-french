@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Basic French</title>
+  <meta name="description" content="Privacy Policy for Basic French (basicfrench.org). Learn how we protect your privacy, quiz progress, and account information.">
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding-bottom: 3rem;
+    }
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+      color: #ffffff;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    .flag {
+      width: 28px;
+      height: 19px;
+      border-radius: 3px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .back-link {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .back-link:hover { background: rgba(255, 255, 255, 0.28); }
+    main {
+      max-width: 800px;
+      margin: 2rem auto 0;
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    }
+    h1 { font-size: 2rem; color: #0f172a; margin-bottom: 0.35rem; }
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+    h2 { font-size: 1.3rem; color: #0f172a; margin: 2rem 0 0.75rem; }
+    p, ul { margin-bottom: 1rem; }
+    ul { padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+    strong { color: #0f172a; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .highlight-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+    footer {
+      max-width: 800px;
+      margin: 2rem auto 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="/" class="logo-group">
+        <svg class="flag" viewBox="0 0 45 30" xmlns="http://www.w3.org/2000/svg" aria-label="French flag">
+          <rect width="15" height="30" x="0" fill="#002395"/>
+          <rect width="15" height="30" x="15" fill="#FFFFFF"/>
+          <rect width="15" height="30" x="30" fill="#ED2939"/>
+        </svg>
+        Basic French
+      </a>
+      <a href="/" class="back-link">← Back to App</a>
+    </div>
+  </header>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last Updated: November 13, 2026</p>
+
+    <div class="highlight-box">
+      <strong>Plain English Summary:</strong> We believe in privacy by default. Basic French is a free educational tool. We only collect the minimal information needed to save your quiz progress and learning stats. We never sell your data, we do not run third-party advertising trackers, and you can delete your data at any time.
+    </div>
+
+    <h2>1. Information We Collect</h2>
+    <p>We collect information in two ways:</p>
+    <ul>
+      <li><strong>Guest Users (Unauthenticated):</strong> If you use the app without logging in, your quiz scores and word practice history are stored exclusively in your browser’s <code>localStorage</code>. No personal identification is collected or transmitted to our servers.</li>
+      <li><strong>Registered Users (Authenticated via Google, Microsoft Entra ID, or GitHub):</strong> If you choose to sign in to sync progress across devices, we receive basic authentication details from your chosen OAuth provider (email address, display name, and optional profile avatar URL).</li>
+      <li><strong>Learning Data:</strong> Quiz session scores, accuracy rates, and spaced-repetition mastery counts.</li>
+    </ul>
+
+    <h2>2. How We Use Your Information</h2>
+    <p>Your information is used strictly to save your quiz scores, generate your personalized "Words to Review" list, and sync your progress across devices. <strong>We do not sell, rent, monetize, or trade your personal data with any third parties or advertisers.</strong></p>
+
+    <h2>3. Data Storage &amp; Security</h2>
+    <p>Authenticated learning data is stored in a PostgreSQL database managed via Supabase with strict Row Level Security (RLS) policies ensuring each user can only read, update, or delete their own records over HTTPS/TLS.</p>
+
+    <h2>4. Your Rights &amp; Data Deletion</h2>
+    <p>Guest users can clear their local history anytime from the "My Stats" dialog or browser settings. Registered users may request complete account and cloud progress deletion by emailing <a href="mailto:dev@basicfrench.org">dev@basicfrench.org</a>.</p>
+
+    <h2>5. Contact Us</h2>
+    <p>
+      <strong>Basic French</strong><br>
+      Attn: John Bendfeldt<br>
+      Email: <a href="mailto:dev@basicfrench.org">dev@basicfrench.org</a><br>
+      Website: <a href="https://basicfrench.org">https://basicfrench.org</a>
+    </p>
+  </main>
+
+  <footer>
+    <p>© 2026 Basic French. All rights reserved. · Part of <a href="https://basiclanguage.school" target="_blank" rel="noopener noreferrer">Basic Language School</a> · <a href="/terms">Terms of Service</a></p>
+  </footer>
+</body>
+</html>
