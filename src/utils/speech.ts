@@ -1,6 +1,6 @@
 /**
  * Audio playback and speech synthesis engine for Basic French (basicfrench.org)
- * Prioritizes studio pre-rendered Microsoft Neural TTS (fr-FR-DeniseNeural) MP3s
+ * Prioritizes studio pre-rendered Microsoft Neural TTS (fr-FR-HenriNeural) MP3s
  * with automatic fallback to browser French speech synthesis.
  */
 import {

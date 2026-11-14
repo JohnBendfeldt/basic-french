@@ -51,13 +51,13 @@ describe('French Curriculum & Studio Neural Audio Integrity Audit', () => {
     expect(numberPhrases).toContain('quatre-vingt-dix');
   });
 
-  it('uses fr-FR-DeniseNeural voice and maps every manifest entry to an existing non-empty MP3 on disk', () => {
-    expect(AUDIO_VOICE).toBe('fr-FR-DeniseNeural');
+  it('uses fr-FR-HenriNeural voice and maps every manifest entry to an existing non-empty MP3 on disk', () => {
+    expect(AUDIO_VOICE).toBe('fr-FR-HenriNeural');
 
     const indexJsonPath = path.join(AUDIO_DIR, 'index.json');
     expect(fs.existsSync(indexJsonPath)).toBe(true);
     const indexJson = JSON.parse(fs.readFileSync(indexJsonPath, 'utf-8'));
-    expect(indexJson.voice).toBe('fr-FR-DeniseNeural');
+    expect(indexJson.voice).toBe('fr-FR-HenriNeural');
 
     const referencedUrls = new Set<string>(Object.values(AUDIO_TEXT_MAP));
     for (const catMap of Object.values(AUDIO_CATEGORY_MAP)) {

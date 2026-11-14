@@ -100,6 +100,19 @@ export const scoreFrenchVoice = (
   else if (lang.startsWith('fr')) score += 15;
 
   if (isNeuralVoice(voice)) score += 40;
+  // Prefer male French voices to stay consistent with studio fr-FR-HenriNeural recordings
+  if (
+    name.includes('henri') ||
+    name.includes('thomas') ||
+    name.includes('rémy') ||
+    name.includes('remy') ||
+    name.includes('daniel') ||
+    name.includes('alain') ||
+    name.includes('paul') ||
+    name.includes('claude')
+  ) {
+    score += 8;
+  }
   if (name.includes('google')) score += 20;
   if (voice.localService) score += 5;
 

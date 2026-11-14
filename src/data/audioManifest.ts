@@ -1,10 +1,10 @@
 /**
  * Pre-rendered neural audio manifest for Basic French (basicfrench.org)
- * Voice: fr-FR-DeniseNeural (Microsoft Edge Neural TTS)
+ * Voice: fr-FR-HenriNeural (Microsoft Edge Neural TTS)
  * Total Verified Audio Files: 374
  */
 
-export const AUDIO_VOICE = 'fr-FR-DeniseNeural';
+export const AUDIO_VOICE = 'fr-FR-HenriNeural';
 
 export const AUDIO_TEXT_MAP: Record<string, string> = {
   "a": "/audio/alphabet/a.mp3",
@@ -73,6 +73,7 @@ export const AUDIO_TEXT_MAP: Record<string, string> = {
   "excusez-moi": "/audio/phrases/excusez-moi.mp3",
   "comment vous appelez-vous": "/audio/phrases/comment_vous_appelez-vous.mp3",
   "je mappelle": "/audio/phrases/je_mappelle.mp3",
+  "enchanté": "/audio/phrases/enchanté.mp3",
   "enchantée": "/audio/phrases/enchanté.mp3",
   "où sont les toilettes": "/audio/phrases/où_sont_les_toilettes.mp3",
   "combien ça coûte": "/audio/phrases/combien_ça_coûte.mp3",
@@ -456,6 +457,7 @@ export const AUDIO_CATEGORY_MAP: Record<string, Record<string, string>> = {
     "comment vous appelez-vous": "/audio/phrases/comment_vous_appelez-vous.mp3",
     "je_mappelle": "/audio/phrases/je_mappelle.mp3",
     "je mappelle": "/audio/phrases/je_mappelle.mp3",
+    "enchanté": "/audio/phrases/enchanté.mp3",
     "enchantée": "/audio/phrases/enchanté.mp3",
     "où_sont_les_toilettes": "/audio/phrases/où_sont_les_toilettes.mp3",
     "où sont les toilettes": "/audio/phrases/où_sont_les_toilettes.mp3",
@@ -833,9 +835,13 @@ export const AUDIO_CATEGORY_MAP: Record<string, Record<string, string>> = {
 
 export function normalizeAudioKey(text: string): string {
   return text
+    .normalize('NFC')
     .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
     .replace(/\.\.\./g, '')
-    .replace(/[.,!?;:()'’"]+/g, '')
+    .replace(/[.,!?;:()'"]+/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -855,11 +861,6 @@ export function getLocalAudioUrl(text: string, category?: string): string | null
   const normalized = normalizeAudioKey(text);
   if (!normalized) return null;
 
-  // 1. Direct normalized text lookup
-  if (AUDIO_TEXT_MAP[normalized]) {
-    return AUDIO_TEXT_MAP[normalized];
-  }
-
   // Normalize category aliases
   const catAlias =
     category === 'basicPhrases' ? 'phrases' :
@@ -868,17 +869,34 @@ export function getLocalAudioUrl(text: string, category?: string): string | null
 
   const slug = slugifyAudioKey(text);
 
-  // 2. Category-specific lookup
+  // 1. Category-specific lookup first (when specified)
   if (catAlias && AUDIO_CATEGORY_MAP[catAlias]) {
     const map = AUDIO_CATEGORY_MAP[catAlias];
     if (map[slug]) return map[slug];
     if (map[normalized]) return map[normalized];
   }
 
+  // 2. Direct normalized text lookup
+  if (AUDIO_TEXT_MAP[normalized]) {
+    return AUDIO_TEXT_MAP[normalized];
+  }
+
   // 3. Primary slash-variant lookup (e.g., "De rien / Je vous en prie" -> "De rien")
   if (text.includes('/')) {
-    const primary = normalizeAudioKey(text.split('/')[0]);
-    if (AUDIO_TEXT_MAP[primary]) return AUDIO_TEXT_MAP[primary];
+    const primary = text.split('/')[0];
+    const primaryNorm = normalizeAudioKey(primary);
+    const primarySlug = slugifyAudioKey(primary);
+    if (catAlias && AUDIO_CATEGORY_MAP[catAlias]) {
+      const map = AUDIO_CATEGORY_MAP[catAlias];
+      if (map[primarySlug]) return map[primarySlug];
+      if (map[primaryNorm]) return map[primaryNorm];
+    }
+    if (AUDIO_TEXT_MAP[primaryNorm]) return AUDIO_TEXT_MAP[primaryNorm];
+    for (const cat of Object.keys(AUDIO_CATEGORY_MAP)) {
+      if (AUDIO_CATEGORY_MAP[cat][primarySlug]) {
+        return AUDIO_CATEGORY_MAP[cat][primarySlug];
+      }
+    }
   }
 
   // 4. Fallback search across all categories by slug
