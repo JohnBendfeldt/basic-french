@@ -101,20 +101,26 @@ header h1 {
   font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  letter-spacing: -0.02em;
+  gap: 0.65rem;
+  letter-spacing: -0.025em;
+  color: #ffffff;
 }
 
-.french-emblem {
-  width: 1.3em;
-  height: auto;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+.app-emblem,
+.french-emblem,
+.french-flag {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  vertical-align: middle;
 }
 
-header h1:hover .french-emblem {
+header h1:hover .app-emblem,
+header h1:hover .french-emblem,
+header h1:hover .french-flag {
   transform: rotate(-8deg) scale(1.08);
 }
 
@@ -2734,6 +2740,14 @@ html {
   
   header {
     padding: 1rem 0.5rem;
+  }
+
+  .app-emblem,
+  .french-emblem,
+  .french-flag {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
   }
 }
 

@@ -255,34 +255,53 @@ const App: React.FC = () => {
             title="Return to French alphabet lessons"
           >
             <svg
-              className="french-emblem"
-              viewBox="0 0 36 36"
+              className="app-emblem french-emblem french-flag"
+              viewBox="0 0 48 48"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               aria-label="Basic French logo"
               role="img"
-              style={{ width: '28px', height: '28px', marginRight: '8px', verticalAlign: 'middle' }}
             >
               <defs>
-                <clipPath id="frenchHeaderCircle">
-                  <circle cx="18" cy="18" r="16" />
-                </clipPath>
+                <linearGradient id="frEmblemBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a8a" />
+                  <stop offset="50%" stopColor="#1e1b4b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+                <linearGradient id="frGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fde047" />
+                  <stop offset="60%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
+                </linearGradient>
               </defs>
-              <g clipPath="url(#frenchHeaderCircle)">
-                <rect x="2" y="2" width="10.7" height="32" fill="#002654" />
-                <rect x="12.7" y="2" width="10.6" height="32" fill="#FFFFFF" />
-                <rect x="23.3" y="2" width="10.7" height="32" fill="#ED2939" />
-                <circle cx="18" cy="18" r="16" fill="#0F172A" fillOpacity="0.28" />
+              <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#frEmblemBg)" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" />
+              <g transform="translate(5, 5)">
+                <defs>
+                  <clipPath id="frFlagClip">
+                    <rect x="0" y="0" width="13" height="9" rx="2" />
+                  </clipPath>
+                </defs>
+                <rect x="-0.5" y="-0.5" width="14" height="10" rx="2.5" fill="rgba(0, 0, 0, 0.45)" />
+                <rect x="0" y="0" width="13" height="9" rx="2" fill="#ffffff" />
+                <g clipPath="url(#frFlagClip)">
+                  <rect x="0" y="0" width="4.33" height="9" fill="#0055a5" />
+                  <rect x="4.33" y="0" width="4.34" height="9" fill="#ffffff" />
+                  <rect x="8.67" y="0" width="4.33" height="9" fill="#ef4135" />
+                </g>
+                <rect x="0" y="0" width="13" height="9" rx="2" fill="none" stroke="#ffffff" strokeWidth="0.8" />
               </g>
-              <circle cx="18" cy="18" r="16.5" stroke="#FFFFFF" strokeWidth="1.8" />
-              <path d="M18 9.5L8.5 14.2L18 19L27.5 14.2L18 9.5Z" fill="#FBBF24" stroke="#1E293B" strokeWidth="0.7" />
-              <path
-                d="M12.5 16.6V22.5C12.5 24.4 15 26.2 18 26.2C21 26.2 23.5 24.4 23.5 22.5V16.6"
-                stroke="#FFFFFF"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path d="M27.5 14.5V20.8" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+              <g transform="translate(0, 3)">
+                <path d="M24 13L8 20.5L24 28L40 20.5L24 13Z" fill="url(#frGoldGrad)" />
+                <path
+                  d="M14 24.5V32C14 35.5 18 38 24 38C30 38 34 35.5 34 32V24.5"
+                  stroke="#ffffff"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                <path d="M40 21V30.5" stroke="url(#frGoldGrad)" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="40" cy="31.5" r="1.5" fill="url(#frGoldGrad)" />
+              </g>
             </svg>
             Basic French
           </h1>
