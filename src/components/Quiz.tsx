@@ -426,7 +426,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         return;
       }
 
-      const activeMastered = overrideMastered || masteredWordIdsRef.current || masteredWordIds;
+      const activeMastered = overrideMastered || masteredWordIdsRef.current;
 
       let candidatePool = pool.filter(
         q => !activeMastered.has(q.id) && !askedQuestionsRef.current.has(q.id)
@@ -445,7 +445,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       askedQuestionsRef.current.add(selected.id);
       setCurrentQuestion(formatQuestion(selected));
     },
-    [buildQuestionPool, masteredWordIds, selectedCategory]
+    [buildQuestionPool, selectedCategory]
   );
 
   useEffect(() => {

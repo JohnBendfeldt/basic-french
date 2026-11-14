@@ -53,14 +53,12 @@ describe('ProgressService Cloud Sync & Supabase Resilience', () => {
     });
 
     let upsertCallCount = 0;
+    const eqChain: { eq: () => typeof eqChain; single: typeof selectSingle } = {
+      eq: () => eqChain,
+      single: selectSingle,
+    };
     mockFrom.mockImplementation(() => ({
-      select: () => ({
-        eq: () => ({
-          eq: () => ({
-            single: selectSingle,
-          }),
-        }),
-      }),
+      select: () => eqChain,
       upsert: () => {
         upsertCallCount++;
         return {

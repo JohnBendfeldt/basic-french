@@ -51,5 +51,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     css: false,
+    env: {
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+    },
   },
 });

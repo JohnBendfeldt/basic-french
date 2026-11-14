@@ -1,6 +1,8 @@
 import { QuizSession, WordProgress, UserStats } from '../types/progress';
 import { supabase } from './supabaseClient';
 
+export const APP_LANGUAGE_ID = 'fr';
+
 export const LOCAL_STORAGE_SESSIONS_KEY = 'french_quiz_sessions';
 export const LOCAL_STORAGE_WORDS_KEY = 'french_word_progress';
 
@@ -89,6 +91,7 @@ export class ProgressService {
             .from('word_progress')
             .select('*')
             .eq('user_id', user.id)
+            .eq('language_id', APP_LANGUAGE_ID)
             .eq('word_id', wordId)
             .single();
 
@@ -100,6 +103,7 @@ export class ProgressService {
 
           const baseRow = {
             user_id: user.id,
+            language_id: APP_LANGUAGE_ID,
             category,
             word_id: wordId,
             prompt,
@@ -117,7 +121,7 @@ export class ProgressService {
                 ...baseRow,
                 target: target || existing?.target || prompt,
               },
-              { onConflict: 'user_id,word_id' }
+              { onConflict: 'user_id,language_id,word_id' }
             )
             .select()
             .single();
@@ -125,7 +129,7 @@ export class ProgressService {
           if (error && String(error.message || '').includes('target')) {
             const retry = await supabase
               .from('word_progress')
-              .upsert(baseRow, { onConflict: 'user_id,word_id' })
+              .upsert(baseRow, { onConflict: 'user_id,language_id,word_id' })
               .select()
               .single();
             data = retry.data;
@@ -207,11 +211,13 @@ export class ProgressService {
         if (user) {
           const { data } = await supabase
             .from('word_progress')
-            .select('word_id')
+            .select('word_id, language_id')
             .eq('user_id', user.id)
             .gte('mastery_level', 5);
           if (data) {
-            data.forEach((row: any) => mastered.add(row.word_id));
+            data
+              .filter((row: any) => !row.language_id || row.language_id === APP_LANGUAGE_ID)
+              .forEach((row: any) => mastered.add(row.word_id));
           }
         }
       } catch (err) {
@@ -244,6 +250,7 @@ export class ProgressService {
             .from('quiz_sessions')
             .insert({
               user_id: user.id,
+              language_id: APP_LANGUAGE_ID,
               category,
               score,
               total_questions: totalQuestions,
@@ -309,7 +316,9 @@ export class ProgressService {
               .eq('user_id', user.id),
           ]);
 
-          const sessions: QuizSession[] = (sessionsRes.data || []).map((s: any) => ({
+          const sessions: QuizSession[] = (sessionsRes.data || [])
+            .filter((s: any) => !s.language_id || s.language_id === APP_LANGUAGE_ID)
+            .map((s: any) => ({
             id: s.id,
             userId: s.user_id,
             category: s.category,
@@ -319,7 +328,9 @@ export class ProgressService {
             completedAt: s.completed_at,
           }));
 
-          const words: WordProgress[] = (wordsRes.data || []).map((w: any) => ({
+          const words: WordProgress[] = (wordsRes.data || [])
+            .filter((w: any) => !w.language_id || w.language_id === APP_LANGUAGE_ID)
+            .map((w: any) => ({
             id: w.id,
             userId: w.user_id,
             category: w.category,
@@ -369,6 +380,7 @@ export class ProgressService {
       if (localWords.length > 0) {
         const payload = localWords.map(w => ({
           user_id: user.id,
+          language_id: APP_LANGUAGE_ID,
           category: w.category,
           word_id: w.wordId,
           prompt: w.prompt,
@@ -381,13 +393,14 @@ export class ProgressService {
 
         const { error } = await supabase
           .from('word_progress')
-          .upsert(payload, { onConflict: 'user_id,word_id' });
+          .upsert(payload, { onConflict: 'user_id,language_id,word_id' });
         if (error) wordsSynced = false;
       }
 
       if (localSessions.length > 0) {
         const sessionPayload = localSessions.slice(0, 20).map(s => ({
           user_id: user.id,
+          language_id: APP_LANGUAGE_ID,
           category: s.category,
           score: s.score,
           total_questions: s.totalQuestions,
