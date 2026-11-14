@@ -4,7 +4,7 @@
 ![React 19.3](https://img.shields.io/badge/React-19.3-61DAFB?logo=react&logoColor=white)
 ![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
 ![Vite 6](https://img.shields.io/badge/Vite-6.4-646CFF?logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-93%20Passing-6E9F18?logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-105%20Passing-6E9F18?logo=vitest&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 **Basic French** ([basicfrench.org](https://basicfrench.org)) is a fast, offline-ready, privacy-first Progressive Web App (PWA) for English speakers learning beginner French. Part of the [Basic Language School](https://basiclanguage.school) ecosystem alongside [Basic Russian](https://basicrussian.org) and [Basic English](https://basicenglish.school).
@@ -21,7 +21,7 @@
   - Bidirectional `FR → EN` and `EN → FR` practice across `All Topics`, `Alphabet`, `Phrases`, `Numbers`, `Time`, and `Words` (`5`, `10`, or `20` questions per session).
   - **French Accent Quick-Insert Bar** (`é`, `è`, `ê`, `ë`, `à`, `â`, `ç`, `î`, `ï`, `ô`, `ù`, `û`, `œ`) + built-in **French Accent Marks Guide**.
   - **Accent-Forgiving Grading** — Accepts unaccented typing (e.g., `ca va` for `Ça va`) while highlighting exact French accents in the feedback drawer, plus French number equivalence and minor typo tolerance.
-  - **5/5 Mastery Tracking** — Retires mastered items (`5/5`) so practice stays focused on weak spots.
+  - **3/3 Mastery Tracking** — Retires mastered items (`3/3`) so practice stays focused on weak spots.
 - **Offline Guest Mode + Optional Cloud Sync** — Works 100% offline with zero sign-up required (`localStorage`), or sign in with **Google**, **GitHub**, or **Microsoft Entra ID** via Supabase OAuth to sync across devices.
 
 ---
@@ -72,6 +72,15 @@ See [`docs/BACKEND_PLAN.md`](./docs/BACKEND_PLAN.md) for full architecture detai
 
 ---
 
+## Contributing & Security
+
+- **Contributing**: Native-speaker French translation fixes, accent/phonetic refinements, accessibility improvements, and bug fixes with tests are welcome — please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
+- **Security**: Please report suspected vulnerabilities privately rather than opening a public issue; see [`SECURITY.md`](SECURITY.md) for disclosure instructions.
+
+---
+
 ## License
 
-MIT © John Bendfeldt — Part of [Basic Language School](https://basiclanguage.school).
+This project's source code is licensed under the MIT License © John Bendfeldt — Part of [Basic Language School](https://basiclanguage.school). See the [LICENSE](LICENSE) file for details.
+
+> **Branding Note**: While the source code is open source under MIT, the **Basic French** / **Basic Language School** names, domain branding (`basicfrench.org`), and custom academic emblems are reserved for the official platform.
