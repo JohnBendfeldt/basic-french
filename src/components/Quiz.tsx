@@ -95,7 +95,7 @@ export const gradeQuizAnswer = (
   expectedAnswer: string,
   isFrenchToEnglish: boolean
 ): GradeResult => {
-  const trimmedUser = userRaw.trim();
+  const trimmedUser = userRaw.trim().slice(0, 250);
   if (!trimmedUser) {
     return {
       isCorrect: false,
@@ -607,15 +607,15 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     if (input && typeof input.selectionStart === 'number' && typeof input.selectionEnd === 'number') {
       const start = input.selectionStart;
       const end = input.selectionEnd;
-      const updated = userAnswer.slice(0, start) + char + userAnswer.slice(end);
+      const updated = (userAnswer.slice(0, start) + char + userAnswer.slice(end)).slice(0, 250);
       setUserAnswer(updated);
       requestAnimationFrame(() => {
         input.focus({ preventScroll: true });
-        const cursor = start + char.length;
+        const cursor = Math.min(start + char.length, updated.length);
         input.setSelectionRange(cursor, cursor);
       });
     } else {
-      setUserAnswer(prev => prev + char);
+      setUserAnswer(prev => (prev + char).slice(0, 250));
       input?.focus({ preventScroll: true });
     }
   };
@@ -1201,7 +1201,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
             type="text"
             className="quiz-input"
             value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
+            maxLength={250}
+            onChange={(e) => setUserAnswer(e.target.value.slice(0, 250))}
             onKeyDown={handleInputKeyDown}
             placeholder={
               currentQuestion.isFrenchToEnglish

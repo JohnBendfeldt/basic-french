@@ -1,5 +1,8 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { levenshteinDistance } from '../utils/frenchText';
+import { ProgressService } from '../services/progressService';
 
 const ROOT_DIR = path.resolve(__dirname, '../..');
 
@@ -13,6 +16,8 @@ describe('Production Security, Netlify Pre-Deploy Gate & PostgreSQL RLS Audit', 
     expect(netlifyToml).toContain('X-Content-Type-Options = "nosniff"');
     expect(netlifyToml).toContain('Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"');
     expect(netlifyToml).toContain("script-src 'self'");
+    expect(netlifyToml).toContain("manifest-src 'self'");
+    expect(netlifyToml).toContain('for = "/*.html"');
     expect(netlifyToml).not.toContain("'unsafe-inline' 'unsafe-eval'");
   });
 
@@ -55,5 +60,67 @@ describe('Production Security, Netlify Pre-Deploy Gate & PostgreSQL RLS Audit', 
     const ciYaml = fs.readFileSync(path.join(ROOT_DIR, '.github/workflows/ci.yml'), 'utf-8');
     expect(ciYaml).toContain('npm test');
     expect(ciYaml).toContain('npm run build');
+  });
+
+  describe('Input Hardening, Prototype Guards & Service Worker No-Reload Regression', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('never triggers window.location.reload from service worker controllerchange in src/index.tsx', () => {
+      const indexTsx = fs.readFileSync(path.join(ROOT_DIR, 'src/index.tsx'), 'utf-8');
+      expect(indexTsx).not.toContain('window.location.reload');
+      expect(indexTsx).not.toContain('controllerchange');
+    });
+
+    it('bounds 20,000-character bad inputs in levenshteinDistance', () => {
+      expect(levenshteinDistance('a'.repeat(20000), 'b'.repeat(20000))).toBe(250);
+    });
+
+    it('sanitizes unsafe localStorage keys, arrays, and out-of-range metrics in ProgressService', async () => {
+      await ProgressService.recordWordAttempt({
+        category: 'phrases',
+        wordId: 'constructor',
+        prompt: 'bonjour',
+        answer: 'hello',
+        isCorrect: true,
+      });
+      await ProgressService.recordWordAttempt({
+        category: 'phrases',
+        wordId: '__proto__',
+        prompt: 'merci',
+        answer: 'thanks',
+        isCorrect: true,
+      });
+      expect(localStorage.getItem('french_word_progress')).toBeNull();
+
+      localStorage.setItem(
+        'french_word_progress',
+        JSON.stringify({
+          __proto__: { wordId: '__proto__', masteryLevel: 5 },
+          constructor: { wordId: 'constructor', masteryLevel: 5 },
+          badArray: [1, 2, 3],
+          ok_word: { wordId: 'ok_word', masteryLevel: 99, timesCorrect: -3 },
+        })
+      );
+      localStorage.setItem(
+        'french_quiz_sessions',
+        JSON.stringify([
+          null,
+          'bad',
+          { category: 'phrases', score: 999, totalQuestions: 10, percentage: 999 },
+        ])
+      );
+
+      const mastered = await ProgressService.getMasteredWordIds();
+      expect(mastered.has('ok_word')).toBe(true);
+      expect(mastered.has('constructor')).toBe(false);
+      expect(mastered.has('__proto__')).toBe(false);
+
+      const stats = await ProgressService.getUserStats();
+      expect(stats.wordsMasteredCount).toBe(1);
+      expect(stats.recentSessions[0].score).toBe(10);
+      expect(stats.recentSessions[0].percentage).toBe(100);
+    });
   });
 });
