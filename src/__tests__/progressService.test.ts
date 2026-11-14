@@ -10,7 +10,7 @@ describe('ProgressService (Guest Mode & LocalStorage Security)', () => {
     localStorage.clear();
   });
 
-  it('records word attempts, increments/decrements mastery clamped to [0, 5], and tracks mastered IDs', async () => {
+  it('records word attempts, increments/decrements mastery clamped to [0, 3], and tracks mastered IDs', async () => {
     const wordId = 'basicPhrases-Bonjour-fr-to-en';
 
     // Incorrect at mastery 0 stays clamped at 0
@@ -25,8 +25,8 @@ describe('ProgressService (Guest Mode & LocalStorage Security)', () => {
     expect(miss.masteryLevel).toBe(0);
     expect(miss.timesIncorrect).toBe(1);
 
-    // 5 consecutive correct answers reach mastery 5
-    for (let i = 1; i <= 5; i++) {
+    // 3 consecutive correct answers reach mastery 3
+    for (let i = 1; i <= 3; i++) {
       const hit = await ProgressService.recordWordAttempt({
         category: 'basicPhrases',
         wordId,
@@ -38,7 +38,7 @@ describe('ProgressService (Guest Mode & LocalStorage Security)', () => {
       expect(hit.masteryLevel).toBe(i);
     }
 
-    // 6th correct stays clamped at 5
+    // 4th correct stays clamped at 3
     const clamped = await ProgressService.recordWordAttempt({
       category: 'basicPhrases',
       wordId,
@@ -47,10 +47,35 @@ describe('ProgressService (Guest Mode & LocalStorage Security)', () => {
       target: 'Bonjour',
       isCorrect: true,
     });
-    expect(clamped.masteryLevel).toBe(5);
+    expect(clamped.masteryLevel).toBe(3);
 
     const mastered = await ProgressService.getMasteredWordIds();
     expect(mastered.has(wordId)).toBe(true);
+  });
+
+  it('overrides a previously missed word attempt cleanly without inflating counts', async () => {
+    const wordId = 'basicPhrases-Merci';
+
+    await ProgressService.recordWordAttempt({
+      category: 'basicPhrases',
+      wordId,
+      prompt: 'Merci',
+      answer: 'Thank you',
+      target: 'Merci',
+      isCorrect: false,
+    });
+
+    const overridden = await ProgressService.overrideWordAttempt({
+      category: 'basicPhrases',
+      wordId,
+      prompt: 'Merci',
+      answer: 'Thank you',
+      target: 'Merci',
+    });
+
+    expect(overridden.timesCorrect).toBe(1);
+    expect(overridden.timesIncorrect).toBe(0);
+    expect(overridden.masteryLevel).toBe(1);
   });
 
   it('records quiz sessions, calculates percentages, and caps local storage at 100 sessions', async () => {
@@ -102,7 +127,7 @@ describe('ProgressService (Guest Mode & LocalStorage Security)', () => {
     localStorage.setItem(LOCAL_STORAGE_SESSIONS_KEY, '{corrupted-json');
     localStorage.setItem(
       LOCAL_STORAGE_WORDS_KEY,
-      '{"__proto__":{"polluted":true},"constructor":{"bad":true},"valid":{"wordId":"valid","masteryLevel":5,"timesCorrect":5,"timesIncorrect":0}}'
+      '{"__proto__":{"polluted":true},"constructor":{"bad":true},"valid":{"wordId":"valid","masteryLevel":3,"timesCorrect":3,"timesIncorrect":0}}'
     );
 
     const mastered = await ProgressService.getMasteredWordIds();

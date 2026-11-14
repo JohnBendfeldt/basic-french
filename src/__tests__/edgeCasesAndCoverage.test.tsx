@@ -251,10 +251,10 @@ describe('Granular French Curriculum, Accents & Component Edge Cases', () => {
             wordId: 'alphabet-A-fr-to-en',
             prompt: 'A — Ami',
             answer: 'Friend',
-            timesCorrect: 5,
+            timesCorrect: 3,
             timesIncorrect: 0,
             lastTestedAt: '2026-11-13T00:00:00Z',
-            masteryLevel: 5,
+            masteryLevel: 3,
           },
         })
       );

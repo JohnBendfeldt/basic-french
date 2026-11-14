@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   FaTrophy,
   FaRedo,
@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import PronunciationButton from './PronunciationButton';
 import { ProgressService } from '../services/progressService';
+import { MASTERY_THRESHOLD } from '../types/progress';
 import { speak } from '../utils/speech';
 import {
   FRENCH_ACCENT_CHARS,
@@ -46,11 +47,13 @@ interface QuestionDef {
   item: AlphabetItem | PhraseItem;
   isFrenchToEnglish: boolean;
   id: string;
+  wordId: string;
   category: Exclude<QuizCategoryFilter, 'all'>;
 }
 
 interface ActiveQuestion {
   id: string;
+  wordId: string;
   type: Exclude<QuizCategoryFilter, 'all'>;
   prompt: string;
   answer: string;
@@ -61,6 +64,11 @@ interface ActiveQuestion {
   badge: string;
   audioCategory: 'alphabet' | 'phrases' | 'numbers' | 'time' | 'words' | 'examples';
 }
+
+const isQuestionMastered = (
+  q: { id?: string; wordId?: string },
+  masteredSet: Set<string>
+): boolean => Boolean((q.wordId && masteredSet.has(q.wordId)) || (q.id && masteredSet.has(q.id)));
 
 interface MissedWord {
   prompt: string;
@@ -233,13 +241,13 @@ const getAudioCategory = (
   }
 };
 
-const CATEGORY_TABS: ReadonlyArray<{ id: QuizCategoryFilter; label: string }> = [
-  { id: 'all', label: 'All Topics' },
-  { id: 'alphabet', label: 'Alphabet' },
-  { id: 'basicPhrases', label: 'Phrases' },
-  { id: 'numbers', label: 'Numbers' },
-  { id: 'time', label: 'Time' },
-  { id: 'commonWords', label: 'Words' },
+const CATEGORY_TABS: ReadonlyArray<{ id: QuizCategoryFilter; label: string; icon: string }> = [
+  { id: 'all', label: 'All Topics', icon: '🎯' },
+  { id: 'alphabet', label: 'Alphabet', icon: '🔤' },
+  { id: 'basicPhrases', label: 'Phrases', icon: '💬' },
+  { id: 'numbers', label: 'Numbers', icon: '🔢' },
+  { id: 'time', label: 'Time', icon: '⏰' },
+  { id: 'commonWords', label: 'Words', icon: '📖' },
 ];
 
 const Quiz: React.FC<QuizProps> = ({ data }) => {
@@ -256,6 +264,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
   const [masteredWordIds, setMasteredWordIds] = useState<Set<string>>(new Set());
   const masteredWordIdsRef = useRef<Set<string>>(new Set());
   const [isWordJustMastered, setIsWordJustMastered] = useState(false);
+  const [isOverridden, setIsOverridden] = useState(false);
 
   const [sessionIndex, setSessionIndex] = useState(1);
   const [sessionScore, setSessionScore] = useState(0);
@@ -272,6 +281,9 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
   const [showAccentTips, setShowAccentTips] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
+  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
+  const incorrectSoundRef = useRef<HTMLAudioElement | null>(null);
+  const lastWordAttemptPromiseRef = useRef<Promise<any> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const askedQuestionsRef = useRef<Set<string>>(new Set());
   const sessionStatsRef = useRef<{
@@ -297,16 +309,19 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       if (includeCat('alphabet') && Array.isArray(data.alphabet)) {
         data.alphabet.forEach(item => {
           if (!item.word || !item.meaning) return;
+          const canonicalWordId = `alphabet-${item.letter}`;
           questions.push({
             item,
             isFrenchToEnglish: true,
             id: `alphabet-${item.letter}-fr-to-en`,
+            wordId: canonicalWordId,
             category: 'alphabet',
           });
           questions.push({
             item,
             isFrenchToEnglish: false,
             id: `alphabet-${item.letter}-en-to-fr`,
+            wordId: canonicalWordId,
             category: 'alphabet',
           });
         });
@@ -324,16 +339,19 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         if (includeCat(cat) && Array.isArray(list)) {
           list.forEach((item: PhraseItem) => {
             if (!item.phrase || !item.translation) return;
+            const canonicalWordId = `${cat}-${item.phrase}`;
             questions.push({
               item,
               isFrenchToEnglish: true,
               id: `${cat}-${item.phrase}-fr-to-en`,
+              wordId: canonicalWordId,
               category: cat,
             });
             questions.push({
               item,
               isFrenchToEnglish: false,
               id: `${cat}-${item.phrase}-en-to-fr`,
+              wordId: canonicalWordId,
               category: cat,
             });
           });
@@ -345,7 +363,38 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     [data]
   );
 
-  const totalCurriculumQuestions = buildQuestionPool(selectedCategory).length;
+  const allQuestionsForCounts = useMemo(() => buildQuestionPool('all'), [buildQuestionPool]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<QuizCategoryFilter, { total: number; mastered: number; wordIds: Set<string> }> = {
+      all: { total: 0, mastered: 0, wordIds: new Set() },
+      alphabet: { total: 0, mastered: 0, wordIds: new Set() },
+      basicPhrases: { total: 0, mastered: 0, wordIds: new Set() },
+      numbers: { total: 0, mastered: 0, wordIds: new Set() },
+      time: { total: 0, mastered: 0, wordIds: new Set() },
+      commonWords: { total: 0, mastered: 0, wordIds: new Set() },
+    };
+
+    allQuestionsForCounts.forEach(q => {
+      const mastered = isQuestionMastered(q, masteredWordIds);
+      if (!counts.all.wordIds.has(q.wordId)) {
+        counts.all.wordIds.add(q.wordId);
+        counts.all.total += 1;
+        if (mastered) counts.all.mastered += 1;
+      }
+      if (counts[q.category] && !counts[q.category].wordIds.has(q.wordId)) {
+        counts[q.category].wordIds.add(q.wordId);
+        counts[q.category].total += 1;
+        if (mastered) counts[q.category].mastered += 1;
+      }
+    });
+
+    return counts;
+  }, [allQuestionsForCounts, masteredWordIds]);
+
+  const activeTotalWords = categoryCounts[selectedCategory]?.total || 0;
+  const masteredInScope = categoryCounts[selectedCategory]?.mastered || 0;
+  const remainingToMaster = Math.max(0, activeTotalWords - masteredInScope);
 
   const formatQuestion = (selected: QuestionDef): ActiveQuestion => {
     if (selected.category === 'alphabet') {
@@ -355,6 +404,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       if (selected.isFrenchToEnglish) {
         return {
           id: selected.id,
+          wordId: selected.wordId,
           type: 'alphabet',
           prompt: `${item.letter} — ${word}`,
           answer: meaning,
@@ -368,6 +418,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       }
       return {
         id: selected.id,
+        wordId: selected.wordId,
         type: 'alphabet',
         prompt: `${meaning} (starts with ${item.letter})`,
         answer: word,
@@ -385,6 +436,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     if (selected.isFrenchToEnglish) {
       return {
         id: selected.id,
+        wordId: selected.wordId,
         type: selected.category,
         prompt: item.phrase,
         answer: item.translation,
@@ -398,6 +450,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     }
     return {
       id: selected.id,
+      wordId: selected.wordId,
       type: selected.category,
       prompt: item.translation,
       answer: item.phrase,
@@ -414,6 +467,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     (overrideMastered?: Set<string>, overrideCategory?: QuizCategoryFilter) => {
       setUserAnswer('');
       setIsCorrect(null);
+      setIsOverridden(false);
       setSpellingDiff(null);
       setUsedAccentForgiveness(false);
       setShowNext(false);
@@ -429,12 +483,12 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       const activeMastered = overrideMastered || masteredWordIdsRef.current;
 
       let candidatePool = pool.filter(
-        q => !activeMastered.has(q.id) && !askedQuestionsRef.current.has(q.id)
+        q => !isQuestionMastered(q, activeMastered) && !askedQuestionsRef.current.has(q.id)
       );
 
       if (candidatePool.length === 0) {
         askedQuestionsRef.current.clear();
-        candidatePool = pool.filter(q => !activeMastered.has(q.id));
+        candidatePool = pool.filter(q => !isQuestionMastered(q, activeMastered));
       }
 
       if (candidatePool.length === 0) {
@@ -457,7 +511,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         setMasteredWordIds(ids);
         if (ids.size > 0) {
           setCurrentQuestion(prev => {
-            if (prev && ids.has(prev.id) && sessionStatsRef.current.total === 0) {
+            if (prev && isQuestionMastered(prev, ids) && sessionStatsRef.current.total === 0) {
               queueMicrotask(() => getRandomQuestion(ids));
             }
             return prev;
@@ -475,12 +529,18 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       getRandomQuestion();
+      try {
+        correctSoundRef.current = new Audio('/audio/sounds/correct.mp3');
+        incorrectSoundRef.current = new Audio('/audio/sounds/incorrect.mp3');
+      } catch {
+        // Ignore Audio init failures in restricted environments
+      }
     }
   }, [getRandomQuestion]);
 
   useEffect(() => {
     if (currentQuestion && !showNext && !isSessionComplete && inputRef.current) {
-      inputRef.current.focus();
+      inputRef.current.focus({ preventScroll: true });
     }
   }, [currentQuestion, showNext, isSessionComplete]);
 
@@ -494,8 +554,28 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           totalQuestions: currentStats.total,
         }).catch(err => console.warn('Could not save partial quiz session:', err));
       }
+      try {
+        correctSoundRef.current?.pause();
+        incorrectSoundRef.current?.pause();
+      } catch {
+        // Ignore audio pause failures on unmount
+      }
     };
   }, []);
+
+  const playSound = (audio: HTMLAudioElement | null) => {
+    if (!audio) return;
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    } catch {
+      // Ignore sound effect failures
+    }
+  };
 
   const playAudio = useCallback(
     (
@@ -530,13 +610,13 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       const updated = userAnswer.slice(0, start) + char + userAnswer.slice(end);
       setUserAnswer(updated);
       requestAnimationFrame(() => {
-        input.focus();
+        input.focus({ preventScroll: true });
         const cursor = start + char.length;
         input.setSelectionRange(cursor, cursor);
       });
     } else {
       setUserAnswer(prev => prev + char);
-      input?.focus();
+      input?.focus({ preventScroll: true });
     }
   };
 
@@ -559,6 +639,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     setSessionScore(newScore);
     setShowNext(true);
 
+    playSound(grade.isCorrect ? correctSoundRef.current : incorrectSoundRef.current);
+
     sessionStatsRef.current = {
       score: newScore,
       total: newAnswered,
@@ -580,17 +662,25 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     }
 
     try {
-      const updatedWord = await ProgressService.recordWordAttempt({
+      const attemptPromise = ProgressService.recordWordAttempt({
         category: currentQuestion.type,
-        wordId: currentQuestion.id,
+        wordId: currentQuestion.wordId,
         prompt: currentQuestion.prompt,
         answer: currentQuestion.answer,
         target: currentQuestion.target,
         isCorrect: grade.isCorrect,
       });
+      lastWordAttemptPromiseRef.current = attemptPromise;
+      const updatedWord = await attemptPromise;
 
-      if (grade.isCorrect && updatedWord.masteryLevel >= 5 && !masteredWordIdsRef.current.has(currentQuestion.id)) {
+      if (
+        grade.isCorrect &&
+        updatedWord.masteryLevel >= MASTERY_THRESHOLD &&
+        !masteredWordIdsRef.current.has(updatedWord.wordId)
+      ) {
         const nextSet = new Set(masteredWordIdsRef.current);
+        nextSet.add(updatedWord.wordId);
+        nextSet.add(currentQuestion.wordId);
         nextSet.add(currentQuestion.id);
         masteredWordIdsRef.current = nextSet;
         setMasteredWordIds(nextSet);
@@ -598,6 +688,46 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       }
     } catch (err) {
       console.warn('Could not record word attempt:', err);
+    }
+  };
+
+  const handleOverrideAnswer = async () => {
+    if (isCorrect || !currentQuestion) return;
+    setIsCorrect(true);
+    setIsOverridden(true);
+    setUsedAccentForgiveness(false);
+    setSpellingDiff(null);
+    const newScore = sessionScore + 1;
+    setSessionScore(newScore);
+    sessionStatsRef.current.score = newScore;
+    setMissedInSession(prev => prev.filter(m => m.prompt !== currentQuestion.prompt));
+    playSound(correctSoundRef.current);
+
+    const questionSnapshot = currentQuestion;
+    try {
+      if (lastWordAttemptPromiseRef.current) {
+        await lastWordAttemptPromiseRef.current;
+      }
+      const updatedWord = await ProgressService.overrideWordAttempt({
+        category: questionSnapshot.type,
+        wordId: questionSnapshot.wordId,
+        prompt: questionSnapshot.prompt,
+        answer: questionSnapshot.answer,
+        target: questionSnapshot.target,
+      });
+      if (updatedWord && updatedWord.masteryLevel >= MASTERY_THRESHOLD) {
+        const nextSet = new Set(masteredWordIdsRef.current);
+        nextSet.add(updatedWord.wordId);
+        nextSet.add(questionSnapshot.wordId);
+        nextSet.add(questionSnapshot.id);
+        masteredWordIdsRef.current = nextSet;
+        setMasteredWordIds(nextSet);
+        if (currentQuestion?.id === questionSnapshot.id) {
+          setIsWordJustMastered(true);
+        }
+      }
+    } catch (err) {
+      console.warn('Error overriding word attempt:', err);
     }
   };
 
@@ -644,6 +774,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       setShowNext(false);
       setUserAnswer('');
       setIsCorrect(null);
+      setIsOverridden(false);
       setSpellingDiff(null);
       setUsedAccentForgiveness(false);
       setIsWordJustMastered(false);
@@ -724,10 +855,6 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     }
   };
 
-  const activePoolIds = new Set(buildQuestionPool(selectedCategory).map(q => q.id));
-  const masteredInScope = Array.from(masteredWordIds).filter(id => activePoolIds.has(id)).length;
-  const remainingToMaster = Math.max(0, totalCurriculumQuestions - masteredInScope);
-
   if (isSessionComplete) {
     const percentage = sessionGoal > 0 ? Math.round((sessionScore / sessionGoal) * 100) : 0;
 
@@ -770,36 +897,66 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
             </div>
             <div className="recap-subtitle-row">
               {headlinePronunciation && (
-                <span className="recap-pronunciation">
-                  Pronunciation: <span className="pronunciation-text">{headlinePronunciation}</span>
-                </span>
+                <>
+                  <span className="recap-pronunciation">
+                    Pronunciation: <span className="pronunciation-text">{headlinePronunciation}</span>
+                  </span>
+                  <span className="recap-separator">·</span>
+                </>
               )}
-              <span className="recap-separator">·</span>
               <span className="recap-english-subtitle">{headlineEnglish}</span>
             </div>
           </div>
 
-          <div className="recap-score-display">
-            <div className="recap-score-main">
-              <span className="recap-score-percent">{percentage}%</span>
-              <span className="recap-score-ratio">{sessionScore} / {sessionGoal} correct</span>
+          <div className="recap-hero-score">
+            <div className="recap-ring-wrap">
+              <svg className="recap-progress-ring" width="136" height="136" viewBox="0 0 136 136" aria-hidden="true">
+                <defs>
+                  <linearGradient id="scoreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={percentage === 100 ? '#f59e0b' : percentage >= 80 ? '#3b82f6' : '#1d4ed8'} />
+                    <stop offset="100%" stopColor={percentage === 100 ? '#fbbf24' : percentage >= 80 ? '#6366f1' : '#1e3a8a'} />
+                  </linearGradient>
+                </defs>
+                <circle
+                  className="recap-ring-track"
+                  cx="68"
+                  cy="68"
+                  r={54}
+                  strokeWidth="9"
+                />
+                <circle
+                  className="recap-ring-bar"
+                  cx="68"
+                  cy="68"
+                  r={54}
+                  strokeWidth="9"
+                  strokeDasharray={339.29}
+                  strokeDashoffset={339.29 - (percentage / 100) * 339.29}
+                  strokeLinecap="round"
+                  transform="rotate(-90 68 68)"
+                />
+              </svg>
+              <div className="recap-ring-label">
+                <span className="recap-score-percent">{percentage}%</span>
+                <span className="recap-score-ratio">{sessionScore} / {sessionGoal} correct</span>
+              </div>
             </div>
 
-            <div className="recap-stats-row" role="group" aria-label="Session summary stats">
-              <div className="recap-stat-pill">
-                <span className="stat-label">Goal</span>
+            <div className="recap-stats-grid" role="group" aria-label="Session summary stats">
+              <div className="recap-stat-card">
+                <span className="stat-label">🎯 Goal</span>
                 <span className="stat-value">{sessionGoal} Qs</span>
               </div>
-              <div className="recap-stat-pill correct">
-                <span className="stat-label">Correct</span>
-                <span className="stat-value">{sessionScore} ✓</span>
+              <div className="recap-stat-card correct">
+                <span className="stat-label">✅ Correct</span>
+                <span className="stat-value">{sessionScore}</span>
               </div>
-              <div className="recap-stat-pill highlight">
-                <span className="stat-label">Mastered</span>
-                <span className="stat-value">{masteredInScope} / {totalCurriculumQuestions}</span>
+              <div className="recap-stat-card highlight">
+                <span className="stat-label">🏆 Mastered</span>
+                <span className="stat-value">{masteredInScope} / {activeTotalWords}</span>
               </div>
-              <div className="recap-stat-pill pool-left">
-                <span className="stat-label">Remaining</span>
+              <div className="recap-stat-card pool-left">
+                <span className="stat-label">📚 Remaining</span>
                 <span className="stat-value">{remainingToMaster}</span>
               </div>
             </div>
@@ -840,6 +997,30 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           )}
 
           <div className="recap-next-session">
+            <div className="recap-topic-selector">
+              <span className="goal-picker-label">Choose topic:</span>
+              <div className="recap-topic-pills" role="tablist" aria-label="Choose quiz topic">
+                {CATEGORY_TABS.map(tab => {
+                  const isActive = selectedCategory === tab.id;
+                  const countInfo = categoryCounts[tab.id];
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`recap-topic-pill ${isActive ? 'active' : ''}`}
+                      onClick={() => handleCategoryChange(tab.id)}
+                      title={`Switch to ${tab.label} (${countInfo?.total || 0} words)`}
+                    >
+                      <span className="cat-icon" aria-hidden="true">{tab.icon}</span>
+                      <span className="cat-label">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="recap-goal-picker">
               <span className="goal-picker-label">Choose next quiz length:</span>
               <div className="goal-picker-buttons" role="group" aria-label="Next quiz length">
@@ -904,18 +1085,25 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
 
       {/* Category Filter Pills */}
       <div className="quiz-category-bar" role="tablist" aria-label="Quiz category filter">
-        {CATEGORY_TABS.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={selectedCategory === tab.id}
-            className={`quiz-category-pill ${selectedCategory === tab.id ? 'active' : ''}`}
-            onClick={() => handleCategoryChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {CATEGORY_TABS.map(tab => {
+          const countInfo = categoryCounts[tab.id];
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={selectedCategory === tab.id}
+              className={`quiz-category-pill ${selectedCategory === tab.id ? 'active' : ''}`}
+              onClick={() => handleCategoryChange(tab.id)}
+            >
+              <span className="cat-icon" aria-hidden="true">{tab.icon}</span>
+              <span>{tab.label}</span>
+              <span className="cat-count-badge">
+                {countInfo?.mastered ? `${countInfo.mastered}/${countInfo.total}` : (countInfo?.total || 0)}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Quiz Progress HUD */}
@@ -958,7 +1146,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         <div className="curriculum-pool-badge" title="Mastered words are removed from future questions">
           <span className="pool-icon">🏆</span>
           <span>
-            Mastered: <strong>{masteredInScope}</strong> / {totalCurriculumQuestions}
+            Mastered: <strong>{masteredInScope}</strong> / {activeTotalWords}
           </span>
           <span className="pool-remaining-tag">({remainingToMaster} remaining)</span>
         </div>
@@ -982,8 +1170,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           )}
         </div>
 
-        {/* Native French Audio Toolbar */}
-        {currentQuestion.target && (
+        {/* Native French Audio Toolbar (hidden on English -> French prompts to avoid spoiling answer) */}
+        {currentQuestion.isFrenchToEnglish && currentQuestion.target && (
           <div className="quiz-audio-controller" role="toolbar" aria-label="Audio controls">
             <button
               type="button"
@@ -1021,8 +1209,10 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                 : 'Type your answer in French...'
             }
             aria-label="Quiz answer input"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
             disabled={showNext}
-            autoFocus
           />
         </div>
 
@@ -1109,8 +1299,14 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                 )}
                 <div className="feedback-text-content">
                   <span className="feedback-title">
-                    {isCorrect ? 'Correct!' : 'Not quite'}
+                    {isCorrect ? (isOverridden ? 'Correct! (Overridden)' : 'Correct!') : 'Not quite'}
                   </span>
+
+                  {isCorrect && isOverridden && (
+                    <div className="feedback-overridden-note">
+                      Answer accepted as correct — score &amp; mastery updated!
+                    </div>
+                  )}
 
                   {!isCorrect && (
                     <div className="feedback-answer-line">
@@ -1142,7 +1338,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
 
                   {isCorrect && isWordJustMastered && (
                     <div className="word-mastered-note">
-                      🏆 <strong>Word Mastered (5/5)!</strong> Removed from upcoming questions.
+                      🏆 <strong>Word Mastered ({MASTERY_THRESHOLD}/{MASTERY_THRESHOLD})!</strong> Removed from upcoming questions.
                     </div>
                   )}
                 </div>
@@ -1160,6 +1356,16 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
             </div>
 
             <div className="feedback-action-area">
+              {!isCorrect && (
+                <button
+                  type="button"
+                  className="feedback-override-button"
+                  onClick={handleOverrideAnswer}
+                  title="Mark my answer as correct (alternative valid translation or phrasing)"
+                >
+                  💡 I was right
+                </button>
+              )}
               {sessionAnswered < sessionGoal ? (
                 <button
                   type="button"

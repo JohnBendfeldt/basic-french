@@ -11,6 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['audio/sounds/correct.mp3', 'audio/sounds/incorrect.mp3'],
       manifest: false,
       workbox: {
         clientsClaim: true,

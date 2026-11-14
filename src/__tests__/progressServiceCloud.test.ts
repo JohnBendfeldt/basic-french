@@ -53,9 +53,14 @@ describe('ProgressService Cloud Sync & Supabase Resilience', () => {
     });
 
     let upsertCallCount = 0;
-    const eqChain: { eq: () => typeof eqChain; single: typeof selectSingle } = {
+    const eqChain: {
+      eq: () => typeof eqChain;
+      single: typeof selectSingle;
+      maybeSingle: typeof selectSingle;
+    } = {
       eq: () => eqChain,
       single: selectSingle,
+      maybeSingle: selectSingle,
     };
     mockFrom.mockImplementation(() => ({
       select: () => eqChain,
@@ -141,10 +146,10 @@ describe('ProgressService Cloud Sync & Supabase Resilience', () => {
                     word_id: 'numbers-70',
                     prompt: 'soixante-dix',
                     answer: '70',
-                    times_correct: 5,
+                    times_correct: 3,
                     times_incorrect: 0,
                     last_tested_at: '2026-11-13T12:00:00Z',
-                    mastery_level: 5,
+                    mastery_level: 3,
                   },
                 ],
               }),

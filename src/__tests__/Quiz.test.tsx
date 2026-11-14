@@ -43,7 +43,7 @@ describe('French Adaptive Quiz Core Flows', () => {
     expect(localStorage.getItem('french_quiz_goal')).toBe('5');
 
     // Switch category filter to Time
-    const timeTab = screen.getByRole('tab', { name: 'Time' });
+    const timeTab = screen.getByRole('tab', { name: /Time/i });
     fireEvent.click(timeTab);
     expect(timeTab).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText(/Il est midi|It is noon/)).toBeInTheDocument();

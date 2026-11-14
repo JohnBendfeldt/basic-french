@@ -5,12 +5,12 @@ import Quiz from '../components/Quiz';
 import * as speechModule from '../utils/speech';
 import { LOCAL_STORAGE_WORDS_KEY } from '../services/progressService';
 
-describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () => {
+describe('French Quiz Accent Bar, Forgiving Grading, Audio & 3/3 Mastery', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it('inserts French accented characters via the Accent Bar, opens Accent Tips, and shows accent diff on unaccented answers', async () => {
+  it('inserts French accented characters via the Accent Bar, opens Accent Tips, hides audio spoiler on en-to-fr, and shows accent diff', async () => {
     // Force English -> French question direction by pre-mastering the FR -> EN question ID
     localStorage.setItem(
       LOCAL_STORAGE_WORDS_KEY,
@@ -21,10 +21,10 @@ describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () =>
           wordId: 'basicPhrases-Ça va-fr-to-en',
           prompt: 'Ça va',
           answer: 'How is it going',
-          timesCorrect: 5,
+          timesCorrect: 3,
           timesIncorrect: 0,
           lastTestedAt: '2026-11-13T00:00:00Z',
-          masteryLevel: 5,
+          masteryLevel: 3,
         },
       })
     );
@@ -44,6 +44,7 @@ describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () =>
     );
 
     expect(await screen.findByText('How do you say this in French?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Play audio$/i })).not.toBeInTheDocument();
 
     // Open and inspect French Accent Marks Guide popover
     const guideBtn = screen.getByRole('button', { name: /French accent guide/i });
@@ -65,25 +66,25 @@ describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () =>
     expect(screen.getByText(/Correct French spelling with accents:/i)).toBeInTheDocument();
   });
 
-  it('triggers Play Audio (1.0x) and Slow (0.7x) French audio buttons and celebrates 5/5 Word Mastered', async () => {
+  it('triggers Play Audio (1.0x) and Slow (0.7x) French audio buttons and celebrates 3/3 Word Mastered', async () => {
     const speakSpy = vi.spyOn(speechModule, 'speak').mockImplementation((_t, _l, _id, onEnd) => {
       if (onEnd) onEnd();
     });
 
-    // Seed word at masteryLevel 4 so one more correct answer promotes it to 5/5 Mastered!
+    // Seed canonical word at masteryLevel 2 so one more correct answer promotes it to 3/3 Mastered!
     localStorage.setItem(
       LOCAL_STORAGE_WORDS_KEY,
       JSON.stringify({
-        'numbers-soixante-dix-fr-to-en': {
+        'numbers-soixante-dix': {
           userId: 'guest_user',
           category: 'numbers',
-          wordId: 'numbers-soixante-dix-fr-to-en',
+          wordId: 'numbers-soixante-dix',
           prompt: 'soixante-dix',
           answer: '70',
-          timesCorrect: 4,
+          timesCorrect: 2,
           timesIncorrect: 0,
           lastTestedAt: '2026-11-13T00:00:00Z',
-          masteryLevel: 4,
+          masteryLevel: 2,
         },
         'numbers-soixante-dix-en-to-fr': {
           userId: 'guest_user',
@@ -91,10 +92,10 @@ describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () =>
           wordId: 'numbers-soixante-dix-en-to-fr',
           prompt: '70',
           answer: 'soixante-dix',
-          timesCorrect: 5,
+          timesCorrect: 3,
           timesIncorrect: 0,
           lastTestedAt: '2026-11-13T00:00:00Z',
-          masteryLevel: 5,
+          masteryLevel: 3,
         },
       })
     );
@@ -140,9 +141,46 @@ describe('French Quiz Accent Bar, Forgiving Grading, Audio & 5/5 Mastery', () =>
     fireEvent.click(screen.getByRole('button', { name: /Check Answer/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Word Mastered \(5\/5\)!/i)).toBeInTheDocument();
+      expect(screen.getByText(/Word Mastered \(3\/3\)!/i)).toBeInTheDocument();
     });
 
     speakSpy.mockRestore();
+  });
+
+  it('allows overriding an incorrect answer via "I was right" and persists canonical progress', async () => {
+    render(
+      <Quiz
+        data={{
+          commonWords: [
+            {
+              phrase: 'eau',
+              translation: 'water',
+              pronunciation: 'oh',
+            },
+          ],
+        }}
+      />
+    );
+
+    const input = await screen.findByLabelText('Quiz answer input');
+    fireEvent.change(input, { target: { value: 'wrong attempt' } });
+    fireEvent.click(screen.getByRole('button', { name: /Check Answer/i }));
+
+    expect(await screen.findByText('Not quite')).toBeInTheDocument();
+
+    const overrideBtn = screen.getByRole('button', { name: /I was right/i });
+    fireEvent.click(overrideBtn);
+
+    expect(await screen.findByText('Correct! (Overridden)')).toBeInTheDocument();
+    expect(screen.getByText(/Answer accepted as correct/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_WORDS_KEY) || '{}');
+      expect(saved['commonWords-eau']).toMatchObject({
+        timesCorrect: 1,
+        timesIncorrect: 0,
+        masteryLevel: 1,
+      });
+    });
   });
 });
