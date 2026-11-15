@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FaTimes, FaTrophy, FaGraduationCap, FaRedo, FaCheckCircle, FaChartBar } from 'react-icons/fa';
 import { ProgressService } from '../services/progressService';
 import { UserStats } from '../types/progress';
 import PronunciationButton from './PronunciationButton';
+import { useModalAccessibility } from '../utils/useModalAccessibility';
 
 interface ProgressModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ interface ProgressModalProps {
 export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, userEmail }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useModalAccessibility({ isOpen, onClose, modalRef });
 
   useEffect(() => {
     if (isOpen) {
@@ -27,17 +31,30 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
   if (!isOpen) return null;
 
   return (
-    <div className="progress-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="progress-modal-container" onClick={(e) => e.stopPropagation()}>
-        <button className="progress-modal-close" onClick={onClose} aria-label="Close modal">
-          <FaTimes />
+    <div className="progress-modal-backdrop" onClick={onClose} role="presentation">
+      <div
+        ref={modalRef}
+        className="progress-modal-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="progress-modal-title"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="progress-modal-close"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          <FaTimes aria-hidden="true" />
         </button>
 
         <div className="progress-modal-header">
           <div className="progress-header-title">
-            <FaChartBar className="header-icon" />
+            <FaChartBar className="header-icon" aria-hidden="true" />
             <div>
-              <h2>Your Learning Progress</h2>
+              <h2 id="progress-modal-title">Your Learning Progress</h2>
               <p className="user-indicator">
                 {userEmail ? `Logged in as ${userEmail}` : 'Guest Mode (Saved in this browser)'}
               </p>
@@ -46,13 +63,13 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
         </div>
 
         {loading ? (
-          <div className="progress-loading">
-            <div className="loading-spinner"></div>
+          <div className="progress-loading" role="status" aria-live="polite">
+            <div className="loading-spinner" aria-hidden="true"></div>
             <p>Loading your statistics...</p>
           </div>
         ) : !stats || (stats.totalQuizzesTaken === 0 && stats.wordsMasteredCount === 0 && stats.wordsLearningCount === 0) ? (
           <div className="progress-empty-state">
-            <FaGraduationCap className="empty-icon" />
+            <FaGraduationCap className="empty-icon" aria-hidden="true" />
             <h3>No Quiz History Yet</h3>
             <p>Start taking French quizzes or practicing phrases to track your accuracy, mastery, and vocabulary over time!</p>
           </div>
@@ -60,8 +77,8 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
           <div className="progress-modal-body">
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon trophy-icon">
-                  <FaTrophy />
+                <div className="stat-icon trophy-icon" aria-hidden="true">
+                  <FaTrophy aria-hidden="true" />
                 </div>
                 <div className="stat-content">
                   <span className="stat-value">{stats.totalQuizzesTaken}</span>
@@ -70,8 +87,8 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon accuracy-icon">
-                  <FaChartBar />
+                <div className="stat-icon accuracy-icon" aria-hidden="true">
+                  <FaChartBar aria-hidden="true" />
                 </div>
                 <div className="stat-content">
                   <span className="stat-value">{stats.averageScore}%</span>
@@ -80,8 +97,8 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon mastered-icon">
-                  <FaCheckCircle />
+                <div className="stat-icon mastered-icon" aria-hidden="true">
+                  <FaCheckCircle aria-hidden="true" />
                 </div>
                 <div className="stat-content">
                   <span className="stat-value">{stats.wordsMasteredCount}</span>
@@ -90,8 +107,8 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon learning-icon">
-                  <FaGraduationCap />
+                <div className="stat-icon learning-icon" aria-hidden="true">
+                  <FaGraduationCap aria-hidden="true" />
                 </div>
                 <div className="stat-content">
                   <span className="stat-value">{stats.wordsLearningCount}</span>
@@ -103,7 +120,7 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
             {stats.wordsToReview.length > 0 && (
               <div className="progress-section">
                 <div className="section-title">
-                  <FaRedo className="section-icon" />
+                  <FaRedo className="section-icon" aria-hidden="true" />
                   <h3>Words &amp; Phrases to Review</h3>
                 </div>
                 <p className="section-subtitle">
@@ -111,24 +128,46 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
                 </p>
 
                 <div className="review-words-list">
-                  {stats.wordsToReview.map((item) => (
-                    <div key={item.wordId} className="review-word-card">
-                      <div className="review-word-info">
-                        <span className="phrase-text target-text">{item.prompt}</span>
-                        <span className="english-translation">{item.answer}</span>
-                      </div>
+                  {stats.wordsToReview.map((item) => {
+                    const isPromptFrench =
+                      !item.target ||
+                      item.prompt === item.target ||
+                      item.prompt.includes(`— ${item.target}`);
 
-                      <div className="review-word-actions">
-                        <span className="accuracy-badge">
-                          {item.timesCorrect}✓ / {item.timesIncorrect}✗
-                        </span>
-                        <PronunciationButton
-                          text={item.target || item.prompt}
-                          audioCategory={item.category as any}
-                        />
+                    return (
+                      <div key={item.wordId} className="review-word-card">
+                        <div className="review-word-info">
+                          <span
+                            className="phrase-text target-text"
+                            lang={isPromptFrench ? 'fr' : 'en'}
+                          >
+                            {item.prompt}
+                          </span>
+                          <span
+                            className="english-translation"
+                            lang={isPromptFrench ? 'en' : 'fr'}
+                          >
+                            {item.answer}
+                          </span>
+                        </div>
+
+                        <div className="review-word-actions">
+                          <span className="accuracy-badge">
+                            <span aria-hidden="true">
+                              {item.timesCorrect}✓ / {item.timesIncorrect}✗
+                            </span>
+                            <span className="visually-hidden">
+                              {item.timesCorrect} correct, {item.timesIncorrect} incorrect
+                            </span>
+                          </span>
+                          <PronunciationButton
+                            text={item.target || item.prompt}
+                            audioCategory={item.category as any}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -136,7 +175,7 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onClose, u
             {stats.recentSessions.length > 0 && (
               <div className="progress-section">
                 <div className="section-title">
-                  <FaTrophy className="section-icon" />
+                  <FaTrophy className="section-icon" aria-hidden="true" />
                   <h3>Recent Quiz Sessions</h3>
                 </div>
 

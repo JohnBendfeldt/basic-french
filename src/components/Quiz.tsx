@@ -13,6 +13,7 @@ import PronunciationButton from './PronunciationButton';
 import { ProgressService } from '../services/progressService';
 import { MASTERY_THRESHOLD } from '../types/progress';
 import { speak } from '../utils/speech';
+import { getScrollBehavior } from '../utils/useModalAccessibility';
 import {
   FRENCH_ACCENT_CHARS,
   FRENCH_ACCENT_TIPS,
@@ -61,7 +62,8 @@ interface ActiveQuestion {
   target: string;
   pronunciation?: string;
   isFrenchToEnglish: boolean;
-  badge: string;
+  badgeIcon: string;
+  badgeText: string;
   audioCategory: 'alphabet' | 'phrases' | 'numbers' | 'time' | 'words' | 'examples';
 }
 
@@ -76,6 +78,7 @@ interface MissedWord {
   userAnswer: string;
   category: string;
   target?: string;
+  isFrenchToEnglish?: boolean;
 }
 
 export interface GradeResult {
@@ -250,6 +253,40 @@ const CATEGORY_TABS: ReadonlyArray<{ id: QuizCategoryFilter; label: string; icon
   { id: 'commonWords', label: 'Words', icon: '📖' },
 ];
 
+const renderAccentTipExample = (accent: string, example: string): React.ReactNode => {
+  switch (accent) {
+    case 'é':
+      return (
+        <>
+          <span lang="fr">café, été</span> (pronounced &quot;ay&quot;)
+        </>
+      );
+    case 'è / ê':
+      return (
+        <>
+          <span lang="fr">père, fête</span> (open &quot;eh&quot;)
+        </>
+      );
+    case 'ç':
+      return (
+        <>
+          <span lang="fr">ça va, français</span> (soft &quot;s&quot; before a/o/u)
+        </>
+      );
+    case 'à / ù':
+      return (
+        <>
+          <span lang="fr">à</span> (to/at) vs <span lang="fr">a</span> (has),{' '}
+          <span lang="fr">où</span> (where) vs <span lang="fr">ou</span> (or)
+        </>
+      );
+    case 'œ':
+      return <span lang="fr">{example}</span>;
+    default:
+      return <span lang="fr">{example}</span>;
+  }
+};
+
 const Quiz: React.FC<QuizProps> = ({ data }) => {
   const [sessionGoal, setSessionGoal] = useState<number>(() => {
     const saved = localStorage.getItem('french_quiz_goal');
@@ -285,6 +322,10 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
   const incorrectSoundRef = useRef<HTMLAudioElement | null>(null);
   const lastWordAttemptPromiseRef = useRef<Promise<any> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const accentToggleRef = useRef<HTMLButtonElement>(null);
+  const categoryTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const recapTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const preserveTabFocusRef = useRef(false);
   const askedQuestionsRef = useRef<Set<string>>(new Set());
   const sessionStatsRef = useRef<{
     score: number;
@@ -297,6 +338,19 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     category: 'all',
     isSaved: false,
   });
+
+  useEffect(() => {
+    if (!showAccentTips) return;
+    const handleAccentEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setShowAccentTips(false);
+        accentToggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleAccentEsc);
+    return () => document.removeEventListener('keydown', handleAccentEsc);
+  }, [showAccentTips]);
 
   const buildQuestionPool = useCallback(
     (categoryFilter: QuizCategoryFilter): QuestionDef[] => {
@@ -412,7 +466,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           target: word,
           pronunciation: item.pronunciation,
           isFrenchToEnglish: true,
-          badge: '🔤 French Alphabet & Vocabulary',
+          badgeIcon: '🔤',
+          badgeText: 'French Alphabet & Vocabulary',
           audioCategory: 'examples',
         };
       }
@@ -426,7 +481,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         target: word,
         pronunciation: item.pronunciation,
         isFrenchToEnglish: false,
-        badge: '✍️ Spell in French',
+        badgeIcon: '✍️',
+        badgeText: 'Spell in French',
         audioCategory: 'examples',
       };
     }
@@ -444,7 +500,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         target: item.phrase,
         pronunciation: item.pronunciation,
         isFrenchToEnglish: true,
-        badge: '🇫🇷 → 🇬🇧 French to English',
+        badgeIcon: '🇫🇷 → 🇬🇧',
+        badgeText: 'French to English',
         audioCategory,
       };
     }
@@ -458,7 +515,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       target: item.phrase,
       pronunciation: item.pronunciation,
       isFrenchToEnglish: false,
-      badge: '🇬🇧 → 🇫🇷 English to French',
+      badgeIcon: '🇬🇧 → 🇫🇷',
+      badgeText: 'English to French',
       audioCategory,
     };
   };
@@ -539,6 +597,10 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
   }, [getRandomQuestion]);
 
   useEffect(() => {
+    if (preserveTabFocusRef.current) {
+      preserveTabFocusRef.current = false;
+      return;
+    }
     if (currentQuestion && !showNext && !isSessionComplete && inputRef.current) {
       inputRef.current.focus({ preventScroll: true });
     }
@@ -601,8 +663,9 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     []
   );
 
-  const handleInsertAccent = (char: string) => {
+  const handleInsertAccent = (char: string, e?: React.MouseEvent<HTMLButtonElement>) => {
     if (showNext) return;
+    const isPointerClick = Boolean(e && e.detail > 0);
     const input = inputRef.current;
     if (input && typeof input.selectionStart === 'number' && typeof input.selectionEnd === 'number') {
       const start = input.selectionStart;
@@ -610,13 +673,21 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       const updated = (userAnswer.slice(0, start) + char + userAnswer.slice(end)).slice(0, 250);
       setUserAnswer(updated);
       requestAnimationFrame(() => {
-        input.focus({ preventScroll: true });
+        if (isPointerClick) {
+          input.focus({ preventScroll: true });
+        }
         const cursor = Math.min(start + char.length, updated.length);
-        input.setSelectionRange(cursor, cursor);
+        try {
+          input.setSelectionRange(cursor, cursor);
+        } catch {
+          // Ignore selection range errors on unfocused inputs in some environments
+        }
       });
     } else {
       setUserAnswer(prev => (prev + char).slice(0, 250));
-      input?.focus({ preventScroll: true });
+      if (isPointerClick) {
+        input?.focus({ preventScroll: true });
+      }
     }
   };
 
@@ -657,6 +728,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           userAnswer: userAnswer.trim(),
           category: currentQuestion.type,
           target: currentQuestion.target,
+          isFrenchToEnglish: currentQuestion.isFrenchToEnglish,
         },
       ]);
     }
@@ -739,7 +811,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
   const handleCompleteSession = useCallback(async () => {
     setIsSessionComplete(true);
     sessionStatsRef.current.isSaved = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: getScrollBehavior() });
     try {
       await ProgressService.recordQuizSession({
         category: selectedCategory,
@@ -753,7 +825,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
 
   const startNewQuizSession = useCallback(
     (newGoal?: number, newCategory?: QuizCategoryFilter) => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: getScrollBehavior() });
       const goal = newGoal !== undefined ? newGoal : sessionGoal;
       const cat = newCategory !== undefined ? newCategory : selectedCategory;
 
@@ -799,7 +871,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     if (sessionAnswered >= newGoal) {
       setIsSessionComplete(true);
       sessionStatsRef.current.isSaved = true;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: getScrollBehavior() });
       ProgressService.recordQuizSession({
         category: selectedCategory,
         score: sessionScore,
@@ -813,19 +885,55 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     startNewQuizSession(sessionGoal, cat);
   };
 
+  const handleCategoryTabKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+    refs: React.MutableRefObject<Array<HTMLButtonElement | null>>
+  ) => {
+    const count = CATEGORY_TABS.length;
+    let nextIndex: number | null = null;
+    if (e.key === 'ArrowRight') {
+      nextIndex = (index + 1) % count;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (index - 1 + count) % count;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = count - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      preserveTabFocusRef.current = true;
+      const nextTab = CATEGORY_TABS[nextIndex];
+      handleCategoryChange(nextTab.id);
+      refs.current[nextIndex]?.focus();
+    }
+  };
+
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        if (isSessionComplete) {
-          e.preventDefault();
-          startNewQuizSession();
-        } else if (showNext && !(e.target instanceof HTMLInputElement)) {
-          e.preventDefault();
-          if (sessionAnswered >= sessionGoal) {
-            handleCompleteSession();
-          } else {
-            handleNextQuestion();
-          }
+      if (e.key !== 'Enter') return;
+      if (document.querySelector('[role="dialog"]')) return;
+
+      if (
+        e.target instanceof Element &&
+        e.target.closest(
+          'button, a, input, select, textarea, [role="button"], [role="tab"], [role="menuitem"]'
+        )
+      ) {
+        return;
+      }
+
+      if (isSessionComplete) {
+        e.preventDefault();
+        startNewQuizSession();
+      } else if (showNext) {
+        e.preventDefault();
+        if (sessionAnswered >= sessionGoal) {
+          handleCompleteSession();
+        } else {
+          handleNextQuestion();
         }
       }
     };
@@ -855,34 +963,40 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     }
   };
 
+  const primaryCorrectAnswer = currentQuestion
+    ? currentQuestion.answer.includes('/')
+      ? currentQuestion.answer.split('/')[0].trim()
+      : currentQuestion.answer
+    : '';
+
   if (isSessionComplete) {
     const percentage = sessionGoal > 0 ? Math.round((sessionScore / sessionGoal) * 100) : 0;
 
     let headlineTitle = 'Félicitations !';
     let headlinePronunciation = 'fay-lee-see-tah-syohn';
     let headlineEnglish = 'Outstanding French mastery!';
-    let recapIcon = <FaTrophy className="recap-icon gold" />;
+    let recapIcon = <FaTrophy className="recap-icon gold" aria-hidden="true" />;
 
     if (percentage >= 90) {
       headlineTitle = 'Félicitations !';
       headlinePronunciation = 'fay-lee-see-tah-syohn';
       headlineEnglish = 'Outstanding French mastery!';
-      recapIcon = <FaTrophy className="recap-icon gold" />;
+      recapIcon = <FaTrophy className="recap-icon gold" aria-hidden="true" />;
     } else if (percentage >= 70) {
       headlineTitle = 'Très bien !';
       headlinePronunciation = 'treh byahn';
       headlineEnglish = 'Great job — your French is coming along nicely!';
-      recapIcon = <FaStar className="recap-icon silver" />;
+      recapIcon = <FaStar className="recap-icon silver" aria-hidden="true" />;
     } else if (percentage >= 50) {
       headlineTitle = 'Bon effort !';
       headlinePronunciation = 'bohn eh-for';
       headlineEnglish = 'Good effort — keep building momentum!';
-      recapIcon = <FaStar className="recap-icon bronze" />;
+      recapIcon = <FaStar className="recap-icon bronze" aria-hidden="true" />;
     } else {
       headlineTitle = 'Continuez !';
       headlinePronunciation = 'kohn-tee-nway';
       headlineEnglish = 'Keep practicing — every question brings you closer!';
-      recapIcon = <FaGraduationCap className="recap-icon practice" />;
+      recapIcon = <FaGraduationCap className="recap-icon practice" aria-hidden="true" />;
     }
 
     return (
@@ -892,8 +1006,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
         <div className="quiz-card quiz-recap-card">
           <div className="recap-header">
             <div className="recap-title-row">
-              <span className="recap-icon-inline">{recapIcon}</span>
-              <h3 className="recap-headline-title">{headlineTitle}</h3>
+              <span className="recap-icon-inline" aria-hidden="true">{recapIcon}</span>
+              <h3 className="recap-headline-title" lang="fr">{headlineTitle}</h3>
             </div>
             <div className="recap-subtitle-row">
               {headlinePronunciation && (
@@ -901,10 +1015,10 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                   <span className="recap-pronunciation">
                     Pronunciation: <span className="pronunciation-text">{headlinePronunciation}</span>
                   </span>
-                  <span className="recap-separator">·</span>
+                  <span className="recap-separator" aria-hidden="true">·</span>
                 </>
               )}
-              <span className="recap-english-subtitle">{headlineEnglish}</span>
+              <span className="recap-english-subtitle" lang="en">{headlineEnglish}</span>
             </div>
           </div>
 
@@ -944,44 +1058,58 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
 
             <div className="recap-stats-grid" role="group" aria-label="Session summary stats">
               <div className="recap-stat-card">
-                <span className="stat-label">🎯 Goal</span>
+                <span className="stat-label"><span aria-hidden="true">🎯 </span>Goal</span>
                 <span className="stat-value">{sessionGoal} Qs</span>
               </div>
               <div className="recap-stat-card correct">
-                <span className="stat-label">✅ Correct</span>
+                <span className="stat-label"><span aria-hidden="true">✅ </span>Correct</span>
                 <span className="stat-value">{sessionScore}</span>
               </div>
               <div className="recap-stat-card highlight">
-                <span className="stat-label">🏆 Mastered</span>
+                <span className="stat-label"><span aria-hidden="true">🏆 </span>Mastered</span>
                 <span className="stat-value">{masteredInScope} / {activeTotalWords}</span>
               </div>
               <div className="recap-stat-card pool-left">
-                <span className="stat-label">📚 Remaining</span>
+                <span className="stat-label"><span aria-hidden="true">📚 </span>Remaining</span>
                 <span className="stat-value">{remainingToMaster}</span>
               </div>
             </div>
 
             <p className="recap-save-notice">
-              <FaCheckCircle className="notice-icon" /> Logged as 1 completed quiz in your learning progress
+              <FaCheckCircle className="notice-icon" aria-hidden="true" /> Logged as 1 completed quiz in your learning progress
             </p>
           </div>
 
           {missedInSession.length > 0 && (
             <div className="recap-missed-section">
-              <h4>Words to Review from This Session ({missedInSession.length})</h4>
+              <h3>Words to Review from This Session ({missedInSession.length})</h3>
               <p className="missed-hint">Listen to the correct French pronunciation to reinforce your memory:</p>
               <div className="missed-words-list">
                 {missedInSession.map((item, idx) => (
                   <div key={idx} className="missed-word-item">
                     <div className="missed-word-details">
-                      <div className="missed-word-prompt">{item.prompt}</div>
+                      <div
+                        className="missed-word-prompt"
+                        lang={item.isFrenchToEnglish ? 'fr' : 'en'}
+                      >
+                        {item.prompt}
+                      </div>
                       <div className="missed-word-answers">
                         <span className="correct-answer-text">
-                          Answer: <strong>{item.answer.split('/')[0].trim()}</strong>
+                          Answer:{' '}
+                          <strong lang={item.isFrenchToEnglish ? 'en' : 'fr'}>
+                            {item.answer.split('/')[0].trim()}
+                          </strong>
                         </span>
                         {item.userAnswer && (
                           <span className="user-answer-text">
-                            You typed: <span className="strikethrough">{item.userAnswer}</span>
+                            You typed:{' '}
+                            <span
+                              className="strikethrough"
+                              lang={item.isFrenchToEnglish ? 'en' : 'fr'}
+                            >
+                              {item.userAnswer}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -1000,17 +1128,23 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
             <div className="recap-topic-selector">
               <span className="goal-picker-label">Choose topic:</span>
               <div className="recap-topic-pills" role="tablist" aria-label="Choose quiz topic">
-                {CATEGORY_TABS.map(tab => {
+                {CATEGORY_TABS.map((tab, idx) => {
                   const isActive = selectedCategory === tab.id;
                   const countInfo = categoryCounts[tab.id];
                   return (
                     <button
                       key={tab.id}
+                      ref={el => {
+                        recapTabRefs.current[idx] = el;
+                      }}
                       type="button"
                       role="tab"
+                      id={`recap-cat-tab-${tab.id}`}
                       aria-selected={isActive}
+                      tabIndex={isActive ? 0 : -1}
                       className={`recap-topic-pill ${isActive ? 'active' : ''}`}
                       onClick={() => handleCategoryChange(tab.id)}
+                      onKeyDown={e => handleCategoryTabKeyDown(e, idx, recapTabRefs)}
                       title={`Switch to ${tab.label} (${countInfo?.total || 0} words)`}
                     >
                       <span className="cat-icon" aria-hidden="true">{tab.icon}</span>
@@ -1028,6 +1162,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                   <button
                     key={count}
                     type="button"
+                    aria-pressed={sessionGoal === count}
                     className={`recap-goal-btn ${sessionGoal === count ? 'active' : ''}`}
                     onClick={() => {
                       setSessionGoal(count);
@@ -1046,14 +1181,12 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                 type="button"
                 className="next-button start-new-quiz-button"
                 onClick={() => startNewQuizSession(sessionGoal)}
-                autoFocus
                 title="Start next quiz session"
-                aria-label={`Start Next Quiz (${sessionGoal} Qs)`}
               >
                 <span className="btn-main-label">
-                  <FaRedo className="btn-icon" /> Start Next Quiz ({sessionGoal} Qs)
+                  <FaRedo className="btn-icon" aria-hidden="true" /> Start Next Quiz ({sessionGoal} Qs)
                 </span>
-                <span className="btn-hint-badge">
+                <span className="btn-hint-badge" aria-hidden="true">
                   press <span className="btn-kbd">↵ Enter</span>
                 </span>
               </button>
@@ -1085,323 +1218,369 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
 
       {/* Category Filter Pills */}
       <div className="quiz-category-bar" role="tablist" aria-label="Quiz category filter">
-        {CATEGORY_TABS.map(tab => {
+        {CATEGORY_TABS.map((tab, idx) => {
+          const isSelected = selectedCategory === tab.id;
           const countInfo = categoryCounts[tab.id];
           return (
             <button
               key={tab.id}
+              ref={el => {
+                categoryTabRefs.current[idx] = el;
+              }}
+              id={`quiz-cat-tab-${tab.id}`}
               type="button"
               role="tab"
-              aria-selected={selectedCategory === tab.id}
-              className={`quiz-category-pill ${selectedCategory === tab.id ? 'active' : ''}`}
+              aria-selected={isSelected}
+              aria-controls="quiz-active-panel"
+              tabIndex={isSelected ? 0 : -1}
+              className={`quiz-category-pill ${isSelected ? 'active' : ''}`}
               onClick={() => handleCategoryChange(tab.id)}
+              onKeyDown={e => handleCategoryTabKeyDown(e, idx, categoryTabRefs)}
             >
               <span className="cat-icon" aria-hidden="true">{tab.icon}</span>
               <span>{tab.label}</span>
               <span className="cat-count-badge">
                 {countInfo?.mastered ? `${countInfo.mastered}/${countInfo.total}` : (countInfo?.total || 0)}
+                <span className="visually-hidden">
+                  {countInfo?.mastered ? ' words mastered' : ' words'}
+                </span>
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* Quiz Progress HUD */}
-      <div className="quiz-header-panel">
-        <div className="quiz-progress-bar-container" aria-label="Session progress bar">
+      <div
+        id="quiz-active-panel"
+        role="tabpanel"
+        aria-labelledby={`quiz-cat-tab-${selectedCategory}`}
+      >
+        {/* Quiz Progress HUD */}
+        <div className="quiz-header-panel">
           <div
-            className="quiz-progress-bar-fill"
-            style={{ width: `${progressPercent}%` }}
-          ></div>
-        </div>
-
-        <div className="quiz-top-bar">
-          <div className="session-progress-counter">
-            <span className="counter-label">Question</span>
-            <span className="counter-current">{sessionIndex}</span>
-            <span className="counter-total">of {sessionGoal}</span>
+            className="quiz-progress-bar-container"
+            role="progressbar"
+            aria-valuenow={sessionAnswered}
+            aria-valuemin={0}
+            aria-valuemax={sessionGoal}
+            aria-label="Session progress"
+          >
+            <div
+              className="quiz-progress-bar-fill"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
           </div>
 
-          <div className="session-score-badge">
+          <div className="quiz-top-bar">
+            <div className="session-progress-counter">
+              <span className="counter-label">Question</span>
+              <span className="counter-current">{sessionIndex}</span>
+              <span className="counter-total">of {sessionGoal}</span>
+            </div>
+
+            <div className="session-score-badge">
+              <span>
+                Score: <strong>{sessionScore}</strong> / {sessionAnswered}
+              </span>
+            </div>
+
+            <div className="quiz-goal-selector" role="group" aria-label="Session question count">
+              {[5, 10, 20].map(count => (
+                <button
+                  key={count}
+                  type="button"
+                  aria-pressed={sessionGoal === count}
+                  className={`goal-pill ${sessionGoal === count ? 'active' : ''}`}
+                  onClick={() => handleGoalChange(count)}
+                  title={`Set quiz session to ${count} questions`}
+                >
+                  {count} Qs
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="curriculum-pool-badge" title="Mastered words are removed from future questions">
+            <span className="pool-icon" aria-hidden="true">🏆</span>
             <span>
-              Score: <strong>{sessionScore}</strong> / {sessionAnswered}
+              Mastered: <strong>{masteredInScope}</strong> / {activeTotalWords}
+            </span>
+            <span className="pool-remaining-tag">({remainingToMaster} remaining)</span>
+          </div>
+        </div>
+
+        <div className="quiz-card">
+          <div className="quiz-mode-pill-container">
+            <span className="quiz-mode-pill">
+              <span aria-hidden="true">{currentQuestion.badgeIcon}</span>{' '}
+              <span>{currentQuestion.badgeText}</span>
             </span>
           </div>
 
-          <div className="quiz-goal-selector" role="group" aria-label="Session question count">
-            {[5, 10, 20].map(count => (
-              <button
-                key={count}
-                type="button"
-                className={`goal-pill ${sessionGoal === count ? 'active' : ''}`}
-                onClick={() => handleGoalChange(count)}
-                title={`Set quiz session to ${count} questions`}
-              >
-                {count} Qs
-              </button>
-            ))}
-          </div>
-        </div>
+          <h3 id="quiz-question-hint" className="quiz-question-hint">
+            {currentQuestion.hint}
+          </h3>
 
-        <div className="curriculum-pool-badge" title="Mastered words are removed from future questions">
-          <span className="pool-icon">🏆</span>
-          <span>
-            Mastered: <strong>{masteredInScope}</strong> / {activeTotalWords}
-          </span>
-          <span className="pool-remaining-tag">({remainingToMaster} remaining)</span>
-        </div>
-      </div>
-
-      <div className="quiz-card">
-        <div className="quiz-mode-pill-container">
-          <span className="quiz-mode-pill">{currentQuestion.badge}</span>
-        </div>
-
-        <h3 className="quiz-question-hint">{currentQuestion.hint}</h3>
-
-        <div className="quiz-prompt">
-          <span className="quiz-prompt-text">{currentQuestion.prompt}</span>
-          {currentQuestion.isFrenchToEnglish && currentQuestion.target && (
-            <PronunciationButton
-              text={currentQuestion.target}
-              className="quiz-prompt-audio margin-left"
-              audioCategory={currentQuestion.audioCategory}
-            />
-          )}
-        </div>
-
-        {/* Native French Audio Toolbar (hidden on English -> French prompts to avoid spoiling answer) */}
-        {currentQuestion.isFrenchToEnglish && currentQuestion.target && (
-          <div className="quiz-audio-controller" role="toolbar" aria-label="Audio controls">
-            <button
-              type="button"
-              className={`quiz-audio-btn primary ${isPlayingAudio ? 'playing' : ''}`}
-              onClick={() => playAudio(currentQuestion.target, 1.0, currentQuestion.audioCategory)}
-              aria-label="Play audio"
+          <div className="quiz-prompt">
+            <span
+              id="quiz-question-prompt"
+              className="quiz-prompt-text"
+              lang={currentQuestion.isFrenchToEnglish ? 'fr' : 'en'}
             >
-              <FaVolumeUp className={isPlayingAudio ? 'pulse-animation' : ''} />
-              <span>{isPlayingAudio ? 'Speaking...' : 'Play Audio'}</span>
-            </button>
-            <button
-              type="button"
-              className="quiz-audio-btn slow"
-              onClick={() => playAudio(currentQuestion.target, 0.7, currentQuestion.audioCategory)}
-              aria-label="Play audio slowly at 0.7x speed"
-              title="Listen at slower 0.7x speed"
-            >
-              <span className="slow-icon" aria-hidden="true">🐢</span>
-              <span>Slow (0.7x)</span>
-            </button>
-          </div>
-        )}
-
-        <div className="input-container">
-          <input
-            ref={inputRef}
-            type="text"
-            className="quiz-input"
-            value={userAnswer}
-            maxLength={250}
-            onChange={(e) => setUserAnswer(e.target.value.slice(0, 250))}
-            onKeyDown={handleInputKeyDown}
-            placeholder={
-              currentQuestion.isFrenchToEnglish
-                ? 'Type the English meaning...'
-                : 'Type your answer in French...'
-            }
-            aria-label="Quiz answer input"
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            disabled={showNext}
-          />
-        </div>
-
-        {/* French Accent Quick-Insert Bar when typing French */}
-        {!currentQuestion.isFrenchToEnglish && (
-          <div className="french-accent-helper" role="region" aria-label="French accent characters">
-            <div className="french-accent-bar">
-              {FRENCH_ACCENT_CHARS.map(char => (
-                <button
-                  key={char}
-                  type="button"
-                  className="accent-key-btn"
-                  onClick={() => handleInsertAccent(char)}
-                  disabled={showNext}
-                  aria-label={`Insert ${char}`}
-                  title={`Insert ${char}`}
-                >
-                  {char}
-                </button>
-              ))}
-              <button
-                type="button"
-                className={`accent-guide-toggle ${showAccentTips ? 'active' : ''}`}
-                onClick={() => setShowAccentTips(prev => !prev)}
-                aria-expanded={showAccentTips}
-                aria-label="French accent guide"
-                title="How French accents work"
-              >
-                <FaInfoCircle aria-hidden="true" />
-                <span>Accents</span>
-              </button>
-            </div>
-
-            {showAccentTips && (
-              <div className="accent-tips-popover" role="note" aria-label="French accent tips">
-                <div className="accent-tips-header">
-                  <strong>French Accent Marks Guide</strong>
-                  <span>Unaccented answers are accepted too!</span>
-                </div>
-                <ul className="accent-tips-list">
-                  {FRENCH_ACCENT_TIPS.map(tip => (
-                    <li key={tip.accent}>
-                      <span className="accent-badge">{tip.accent}</span>
-                      <strong>{tip.name}:</strong> {tip.example}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {currentQuestion.prompt}
+            </span>
+            {currentQuestion.isFrenchToEnglish && currentQuestion.target && (
+              <PronunciationButton
+                text={currentQuestion.target}
+                className="quiz-prompt-audio margin-left"
+                audioCategory={currentQuestion.audioCategory}
+              />
             )}
           </div>
-        )}
 
-        <div className="quiz-buttons">
-          {!showNext && (
-            <button
-              type="button"
-              className="check-button"
-              onClick={handleCheckAnswer}
-              aria-label="Check Answer"
-            >
-              <span className="btn-main-label">Check Answer</span>
-              <span className="btn-hint-badge">
-                press <span className="btn-kbd">↵ Enter</span>
-              </span>
-            </button>
+          {/* Native French Audio Toolbar (hidden on English -> French prompts to avoid spoiling answer) */}
+          {currentQuestion.isFrenchToEnglish && currentQuestion.target && (
+            <div className="quiz-audio-controller" role="toolbar" aria-label="Audio controls">
+              <button
+                type="button"
+                className={`quiz-audio-btn primary ${isPlayingAudio ? 'playing' : ''}`}
+                onClick={() => playAudio(currentQuestion.target, 1.0, currentQuestion.audioCategory)}
+              >
+                <FaVolumeUp className={isPlayingAudio ? 'pulse-animation' : ''} aria-hidden="true" />
+                <span>{isPlayingAudio ? 'Speaking...' : 'Play Audio'}</span>
+              </button>
+              <button
+                type="button"
+                className="quiz-audio-btn slow"
+                onClick={() => playAudio(currentQuestion.target, 0.7, currentQuestion.audioCategory)}
+                aria-label="Slow (0.7x) — Play audio slowly at 0.7x speed"
+                title="Listen at slower 0.7x speed"
+              >
+                <span className="slow-icon" aria-hidden="true">🐢</span>
+                <span>Slow (0.7x)</span>
+              </button>
+            </div>
           )}
+
+          <div className="input-container">
+            <input
+              ref={inputRef}
+              type="text"
+              className="quiz-input"
+              value={userAnswer}
+              maxLength={250}
+              onChange={(e) => setUserAnswer(e.target.value.slice(0, 250))}
+              onKeyDown={handleInputKeyDown}
+              placeholder={
+                currentQuestion.isFrenchToEnglish
+                  ? 'Type the English meaning...'
+                  : 'Type your answer in French...'
+              }
+              lang={currentQuestion.isFrenchToEnglish ? 'en' : 'fr'}
+              aria-label="Quiz answer input"
+              aria-describedby="quiz-question-hint quiz-question-prompt"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              disabled={showNext}
+            />
+          </div>
+
+          {/* French Accent Quick-Insert Bar when typing French */}
+          {!currentQuestion.isFrenchToEnglish && (
+            <div className="french-accent-helper" role="region" aria-label="French accent characters">
+              <div className="french-accent-bar">
+                {FRENCH_ACCENT_CHARS.map(char => (
+                  <button
+                    key={char}
+                    type="button"
+                    className="accent-key-btn"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => handleInsertAccent(char, e)}
+                    disabled={showNext}
+                    aria-label={`Insert ${char}`}
+                    title={`Insert ${char}`}
+                  >
+                    <span lang="fr">{char}</span>
+                  </button>
+                ))}
+                <button
+                  ref={accentToggleRef}
+                  type="button"
+                  className={`accent-guide-toggle ${showAccentTips ? 'active' : ''}`}
+                  onClick={() => setShowAccentTips(prev => !prev)}
+                  aria-expanded={showAccentTips}
+                  aria-controls={showAccentTips ? 'french-accent-tips-popover' : undefined}
+                  aria-label="Accents — French accent guide"
+                  title="How French accents work"
+                >
+                  <FaInfoCircle aria-hidden="true" />
+                  <span>Accents</span>
+                </button>
+              </div>
+
+              {showAccentTips && (
+                <div
+                  id="french-accent-tips-popover"
+                  className="accent-tips-popover"
+                  role="note"
+                  aria-label="French accent tips"
+                >
+                  <div className="accent-tips-header">
+                    <strong>French Accent Marks Guide</strong>
+                    <span>Unaccented answers are accepted too!</span>
+                  </div>
+                  <ul className="accent-tips-list">
+                    {FRENCH_ACCENT_TIPS.map(tip => (
+                      <li key={tip.accent}>
+                        <span className="accent-badge" lang="fr">{tip.accent}</span>
+                        <strong lang="fr">{tip.name}:</strong>{' '}
+                        {renderAccentTipExample(tip.accent, tip.example)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="quiz-buttons">
+            {!showNext && (
+              <button
+                type="button"
+                className="check-button"
+                onClick={handleCheckAnswer}
+              >
+                <span className="btn-main-label">Check Answer</span>
+                <span className="btn-hint-badge" aria-hidden="true">
+                  press <span className="btn-kbd">↵ Enter</span>
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Feedback Drawer */}
-      {showNext && isCorrect !== null && (
-        <div
-          className={`quiz-feedback-drawer ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`}
-          role="region"
-          aria-live="polite"
-        >
-          <div className="feedback-drawer-inner">
-            <div className="feedback-info-area">
-              <div className="feedback-header-row">
-                {isCorrect ? (
-                  <FaCheckCircle className="feedback-icon correct-icon" />
-                ) : (
-                  <FaTimesCircle className="feedback-icon incorrect-icon" />
-                )}
-                <div className="feedback-text-content">
-                  <span className="feedback-title">
-                    {isCorrect ? (isOverridden ? 'Correct! (Overridden)' : 'Correct!') : 'Not quite'}
-                  </span>
-
-                  {isCorrect && isOverridden && (
-                    <div className="feedback-overridden-note">
-                      Answer accepted as correct — score &amp; mastery updated!
-                    </div>
+      {/* Persistent Polite Live Region for Feedback Drawer */}
+      <div className="quiz-feedback-live-region" aria-live="polite">
+        {showNext && isCorrect !== null && (
+          <div
+            className={`quiz-feedback-drawer ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`}
+            role="region"
+            aria-label="Answer feedback"
+          >
+            <div className="feedback-drawer-inner">
+              <div className="feedback-info-area">
+                <div className="feedback-header-row">
+                  {isCorrect ? (
+                    <FaCheckCircle className="feedback-icon correct-icon" aria-hidden="true" />
+                  ) : (
+                    <FaTimesCircle className="feedback-icon incorrect-icon" aria-hidden="true" />
                   )}
+                  <div className="feedback-text-content">
+                    <span className="feedback-title">
+                      {isCorrect ? (isOverridden ? 'Correct! (Overridden)' : 'Correct!') : 'Not quite'}
+                    </span>
 
-                  {!isCorrect && (
-                    <div className="feedback-answer-line">
-                      <span>The correct answer is: </span>
-                      <strong className="feedback-correct-word">
-                        {currentQuestion.answer.includes('/')
-                          ? currentQuestion.answer.split('/')[0].trim()
-                          : currentQuestion.answer}
-                      </strong>
-                    </div>
-                  )}
+                    {isCorrect && isOverridden && (
+                      <div className="feedback-overridden-note">
+                        Answer accepted as correct — score &amp; mastery updated!
+                      </div>
+                    )}
 
-                  {isCorrect && spellingDiff && (
-                    <div className="spelling-note">
-                      <span>
-                        {usedAccentForgiveness
-                          ? 'Correct French spelling with accents: '
-                          : 'Exact spelling: '}
-                      </span>
-                      <strong>
-                        {spellingDiff.map((part, idx) => (
-                          <span key={idx} className={part.isDiff ? 'diff-char' : undefined}>
-                            {part.char}
-                          </span>
-                        ))}
-                      </strong>
-                    </div>
-                  )}
+                    {!isCorrect && (
+                      <div className="feedback-answer-line">
+                        <span>The correct answer is: </span>
+                        <strong
+                          className="feedback-correct-word"
+                          lang={currentQuestion.isFrenchToEnglish ? 'en' : 'fr'}
+                        >
+                          {primaryCorrectAnswer}
+                        </strong>
+                      </div>
+                    )}
 
-                  {isCorrect && isWordJustMastered && (
-                    <div className="word-mastered-note">
-                      🏆 <strong>Word Mastered ({MASTERY_THRESHOLD}/{MASTERY_THRESHOLD})!</strong> Removed from upcoming questions.
-                    </div>
-                  )}
+                    {isCorrect && spellingDiff && (
+                      <div className="spelling-note">
+                        <span>
+                          {usedAccentForgiveness
+                            ? 'Correct French spelling with accents: '
+                            : 'Exact spelling: '}
+                        </span>
+                        <strong lang={currentQuestion.isFrenchToEnglish ? 'en' : 'fr'}>
+                          {spellingDiff.map((part, idx) => (
+                            <span key={idx} className={part.isDiff ? 'diff-char' : undefined}>
+                              {part.char}
+                            </span>
+                          ))}
+                        </strong>
+                      </div>
+                    )}
+
+                    {isCorrect && isWordJustMastered && (
+                      <div className="word-mastered-note">
+                        <span aria-hidden="true">🏆 </span>
+                        <strong>Word Mastered ({MASTERY_THRESHOLD}/{MASTERY_THRESHOLD})!</strong> Removed from upcoming questions.
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {currentQuestion.target && (
+                  <div className="feedback-audio-action">
+                    <PronunciationButton
+                      text={currentQuestion.target}
+                      className="feedback-pronounce-btn"
+                      audioCategory={currentQuestion.audioCategory}
+                    />
+                  </div>
+                )}
               </div>
 
-              {currentQuestion.target && (
-                <div className="feedback-audio-action">
-                  <PronunciationButton
-                    text={currentQuestion.target}
-                    className="feedback-pronounce-btn"
-                    audioCategory={currentQuestion.audioCategory}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="feedback-action-area">
-              {!isCorrect && (
-                <button
-                  type="button"
-                  className="feedback-override-button"
-                  onClick={handleOverrideAnswer}
-                  title="Mark my answer as correct (alternative valid translation or phrasing)"
-                >
-                  💡 I was right
-                </button>
-              )}
-              {sessionAnswered < sessionGoal ? (
-                <button
-                  type="button"
-                  className={`feedback-continue-button ${isCorrect ? 'btn-next-correct' : 'btn-next-incorrect'}`}
-                  onClick={handleNextQuestion}
-                  autoFocus
-                  aria-label={`Next Question (${sessionIndex + 1}/${sessionGoal})`}
-                >
-                  <span className="btn-main-label">
-                    Next Question ({sessionIndex + 1}/{sessionGoal})
-                  </span>
-                  <span className="btn-hint-badge">
-                    press <span className="btn-kbd">↵ Enter</span>
-                  </span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="feedback-continue-button finish-quiz-button"
-                  onClick={handleCompleteSession}
-                  autoFocus
-                  aria-label="Complete Quiz & View Results"
-                >
-                  <span className="btn-main-label">
-                    <FaCheckCircle className="btn-icon" /> Complete Quiz &amp; View Results 🎉
-                  </span>
-                  <span className="btn-hint-badge">
-                    press <span className="btn-kbd">↵ Enter</span>
-                  </span>
-                </button>
-              )}
+              <div className="feedback-action-area">
+                {!isCorrect && (
+                  <button
+                    type="button"
+                    className="feedback-override-button"
+                    onClick={handleOverrideAnswer}
+                    title="Mark my answer as correct (alternative valid translation or phrasing)"
+                  >
+                    <span aria-hidden="true">💡</span> I was right
+                  </button>
+                )}
+                {sessionAnswered < sessionGoal ? (
+                  <button
+                    type="button"
+                    className={`feedback-continue-button ${isCorrect ? 'btn-next-correct' : 'btn-next-incorrect'}`}
+                    onClick={handleNextQuestion}
+                  >
+                    <span className="btn-main-label">
+                      Next Question ({sessionIndex + 1}/{sessionGoal})
+                    </span>
+                    <span className="btn-hint-badge" aria-hidden="true">
+                      press <span className="btn-kbd">↵ Enter</span>
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="feedback-continue-button finish-quiz-button"
+                    onClick={handleCompleteSession}
+                  >
+                    <span className="btn-main-label">
+                      <FaCheckCircle className="btn-icon" aria-hidden="true" /> Complete Quiz &amp; View Results{' '}
+                      <span aria-hidden="true">🎉</span>
+                    </span>
+                    <span className="btn-hint-badge" aria-hidden="true">
+                      press <span className="btn-kbd">↵ Enter</span>
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

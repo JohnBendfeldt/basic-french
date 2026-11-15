@@ -216,11 +216,11 @@ describe('Granular French Curriculum, Accents & Component Edge Cases', () => {
       fireEvent.click(screen.getByRole('button', { name: /User menu for Claire/i }));
       expect(screen.getByText(/Google/i)).toBeInTheDocument();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Terms of Service' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Terms of Service' }));
       expect(onNavigate).toHaveBeenCalledWith('terms');
 
       fireEvent.click(screen.getByRole('button', { name: /User menu for Claire/i }));
-      fireEvent.click(screen.getByRole('button', { name: /Sign Out/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /Sign Out/i }));
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Sign in to sync progress/i })).toBeInTheDocument();

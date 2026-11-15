@@ -180,11 +180,60 @@ describe('French Speech Engine, Voice Scoring & PronunciationButton', () => {
     render(<PronunciationButton text="Bonjour" audioCategory="basicPhrases" />);
 
     const btn = await screen.findByRole('button', { name: /Pronounce "Bonjour"/i });
-    await waitFor(() => expect(btn).not.toBeDisabled());
+    await waitFor(() => expect(btn).toHaveAttribute('aria-disabled', 'false'));
 
     fireEvent.click(btn);
     await waitFor(() => {
       expect(btn).toHaveAttribute('aria-label', 'Pronounce "Bonjour"');
+      expect(btn).toHaveAttribute('aria-disabled', 'false');
     });
+  });
+
+  it('retains keyboard focus on PronunciationButton during active playback using aria-disabled instead of disabled', async () => {
+    const audioInstances: any[] = [];
+    class HangingAudio {
+      src: string;
+      playbackRate = 1;
+      currentTime = 0;
+      duration = 1.0;
+      listeners: Record<string, Array<() => void>> = {};
+      pause = vi.fn();
+      play = vi.fn(() => Promise.resolve());
+
+      constructor(src: string) {
+        this.src = src;
+        audioInstances.push(this);
+      }
+      addEventListener(event: string, cb: () => void) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(cb);
+      }
+      emit(event: string) {
+        (this.listeners[event] || []).forEach(fn => fn());
+      }
+    }
+    global.Audio = HangingAudio as any;
+
+    render(<PronunciationButton text="Bonjour" audioCategory="basicPhrases" />);
+    const btn = await screen.findByRole('button', { name: /Pronounce "Bonjour"/i });
+    await waitFor(() => expect(btn).toHaveAttribute('aria-disabled', 'false'));
+
+    btn.focus();
+    expect(document.activeElement).toBe(btn);
+
+    fireEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
+    expect(btn).not.toBeDisabled();
+    expect(document.activeElement).toBe(btn);
+
+    // Additional clicks while aria-disabled="true" are ignored cleanly
+    fireEvent.click(btn);
+    expect(audioInstances).toHaveLength(1);
+
+    audioInstances[0].emit('ended');
+    await waitFor(() => {
+      expect(btn).toHaveAttribute('aria-disabled', 'false');
+    });
+    expect(document.activeElement).toBe(btn);
   });
 });

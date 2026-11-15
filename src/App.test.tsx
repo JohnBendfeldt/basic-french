@@ -7,7 +7,11 @@ describe('Basic French App Shell', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /Basic French/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Basic French logo/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Basic French/i })).toHaveAttribute(
+      'title',
+      'Return to alphabet lessons'
+    );
+    expect(document.querySelector('svg.app-emblem')).toHaveAttribute('aria-hidden', 'true');
 
     const headerHubLink = screen.getByRole('link', {
       name: /Explore 15\+ world languages on Basic Language School/i,

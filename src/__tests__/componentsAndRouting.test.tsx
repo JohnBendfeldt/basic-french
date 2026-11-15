@@ -78,7 +78,7 @@ describe('SPA Routing, Modals, UserMenu Security & Ecosystem Links', () => {
     fireEvent.click(screen.getByRole('button', { name: /Close modal/i }));
 
     // Open Guest ProgressModal
-    fireEvent.click(screen.getByRole('button', { name: /View learning stats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /My Stats — View learning progress/i }));
     expect(await screen.findByRole('heading', { name: /No Quiz History Yet/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Close modal/i }));
   });
@@ -120,11 +120,11 @@ describe('SPA Routing, Modals, UserMenu Security & Ecosystem Links', () => {
     const trigger = screen.getByRole('button', { name: /User menu for Camille Laurent/i });
     fireEvent.click(trigger);
 
-    const hubLink = screen.getByRole('link', { name: /15\+ Languages Hub/i });
+    const hubLink = screen.getByRole('menuitem', { name: /15\+ Languages Hub/i });
     expect(hubLink).toHaveAttribute('href', 'https://basiclanguage.school');
     expect(hubLink).toHaveAttribute('target', '_blank');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Privacy Policy' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Privacy Policy' }));
     expect(onNavigate).toHaveBeenCalledWith('privacy');
   });
 });

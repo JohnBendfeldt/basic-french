@@ -78,9 +78,11 @@ const PronunciationButton: React.FC<PronunciationButtonProps> = ({
     };
   }, [isPlaying]);
 
+  const isBusy = isPlaying || !initialized;
+
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlaying || !text) return;
+    if (isPlaying || !initialized || !text) return;
 
     unlockIOSAudio();
     setIsPlaying(true);
@@ -108,7 +110,7 @@ const PronunciationButton: React.FC<PronunciationButtonProps> = ({
       type="button"
       className={`pronunciation-button ${isPlaying ? 'playing' : ''} ${className || ''}`}
       onClick={handleSpeak}
-      disabled={isPlaying || !initialized}
+      aria-disabled={isBusy}
       title={isPlaying ? 'Speaking...' : label || `Pronounce "${text}"`}
       aria-label={isPlaying ? 'Speaking...' : label || `Pronounce "${text}"`}
       data-button-id={buttonId.current}

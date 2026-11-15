@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaUser, FaSignOutAlt, FaChartLine, FaSignInAlt, FaGoogle, FaMicrosoft, FaGithub, FaShieldAlt, FaFileContract, FaGlobe } from 'react-icons/fa';
+import {
+  FaUser,
+  FaSignOutAlt,
+  FaChartLine,
+  FaSignInAlt,
+  FaGoogle,
+  FaMicrosoft,
+  FaGithub,
+  FaShieldAlt,
+  FaFileContract,
+  FaGlobe,
+} from 'react-icons/fa';
 import { supabase, signOutUser, isSafeHttpsUrl, consumeGoogleIdTokenFromHash } from '../services/supabaseClient';
 import { ProgressService } from '../services/progressService';
 import AuthModal from './AuthModal';
@@ -16,6 +27,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -55,6 +68,60 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+    if (items && items.length > 0) {
+      items[0].focus();
+    }
+  }, [menuOpen]);
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') || []
+    );
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      setMenuOpen(false);
+      triggerRef.current?.focus();
+      return;
+    }
+
+    if (items.length === 0) return;
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % items.length : 0;
+      items[nextIndex].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex =
+        currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+      items[prevIndex].focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1].focus();
+    } else if (e.key === 'Tab') {
+      setMenuOpen(false);
+    }
+  };
+
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!menuOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      setMenuOpen(true);
+    } else if (menuOpen && e.key === 'Escape') {
+      e.preventDefault();
+      setMenuOpen(false);
+    }
+  };
+
   const handleSignOut = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setMenuOpen(false);
@@ -73,11 +140,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
       {currentUser ? (
         <>
           <button
+            ref={triggerRef}
             type="button"
             className="user-profile-trigger"
             onClick={() => setMenuOpen((prev) => !prev)}
+            onKeyDown={handleTriggerKeyDown}
             aria-expanded={menuOpen}
-            aria-haspopup="true"
+            aria-haspopup="menu"
             aria-label={`User menu for ${displayName}`}
           >
             {avatarUrl ? (
@@ -89,8 +158,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
                 loading="lazy"
               />
             ) : (
-              <div className="user-avatar-placeholder">
-                <FaUser />
+              <div className="user-avatar-placeholder" aria-hidden="true">
+                <FaUser aria-hidden="true" />
               </div>
             )}
             <span className="user-display-name">{displayName}</span>
@@ -99,8 +168,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
           {menuOpen && (
             <div
               className="user-dropdown-menu"
-              role="menu"
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={handleMenuKeyDown}
             >
               <div className="user-dropdown-header">
                 <p className="dropdown-name">{displayName}</p>
@@ -108,82 +177,97 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
                 <span className="provider-badge">
                   {provider === 'azure' ? (
                     <>
-                      <FaMicrosoft /> Microsoft Entra ID
+                      <FaMicrosoft aria-hidden="true" /> Microsoft Entra ID
                     </>
                   ) : provider === 'github' ? (
                     <>
-                      <FaGithub /> GitHub
+                      <FaGithub aria-hidden="true" /> GitHub
                     </>
                   ) : (
                     <>
-                      <FaGoogle /> Google
+                      <FaGoogle aria-hidden="true" /> Google
                     </>
                   )}
                 </span>
               </div>
 
-              <div className="dropdown-divider"></div>
-
-              <button
-                type="button"
-                className="dropdown-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen(false);
-                  setProgressModalOpen(true);
-                }}
+              <div
+                ref={menuRef}
+                role="menu"
+                aria-label={`Account menu for ${displayName}`}
               >
-                <FaChartLine />
-                <span>My Progress &amp; Stats</span>
-              </button>
+                <div className="dropdown-divider" role="separator"></div>
 
-              <a
-                href="https://basiclanguage.school"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="dropdown-item"
-                onClick={() => setMenuOpen(false)}
-              >
-                <FaGlobe />
-                <span>15+ Languages Hub</span>
-              </a>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="dropdown-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(false);
+                    setProgressModalOpen(true);
+                  }}
+                >
+                  <FaChartLine aria-hidden="true" />
+                  <span>My Progress &amp; Stats</span>
+                </button>
 
-              {onNavigate && (
-                <>
-                  <div className="dropdown-divider"></div>
-                  <button
-                    type="button"
-                    className="dropdown-item legal-dropdown-item"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpen(false);
-                      onNavigate('privacy');
-                    }}
-                  >
-                    <FaShieldAlt />
-                    <span>Privacy Policy</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="dropdown-item legal-dropdown-item"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpen(false);
-                      onNavigate('terms');
-                    }}
-                  >
-                    <FaFileContract />
-                    <span>Terms of Service</span>
-                  </button>
-                </>
-              )}
+                <a
+                  href="https://basiclanguage.school"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  role="menuitem"
+                  className="dropdown-item"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <FaGlobe aria-hidden="true" />
+                  <span>15+ Languages Hub</span>
+                </a>
 
-              <div className="dropdown-divider"></div>
+                {onNavigate && (
+                  <>
+                    <div className="dropdown-divider" role="separator"></div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="dropdown-item legal-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onNavigate('privacy');
+                      }}
+                    >
+                      <FaShieldAlt aria-hidden="true" />
+                      <span>Privacy Policy</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="dropdown-item legal-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onNavigate('terms');
+                      }}
+                    >
+                      <FaFileContract aria-hidden="true" />
+                      <span>Terms of Service</span>
+                    </button>
+                  </>
+                )}
 
-              <button type="button" className="dropdown-item signout-btn" onClick={handleSignOut}>
-                <FaSignOutAlt />
-                <span>Sign Out</span>
-              </button>
+                <div className="dropdown-divider" role="separator"></div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="dropdown-item signout-btn"
+                  onClick={handleSignOut}
+                >
+                  <FaSignOutAlt aria-hidden="true" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           )}
         </>
@@ -193,10 +277,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
             type="button"
             className="header-action-btn progress-btn"
             onClick={() => setProgressModalOpen(true)}
-            title="View learning stats"
-            aria-label="View learning stats"
+            title="My Stats — View learning progress"
+            aria-label="My Stats — View learning progress"
           >
-            <FaChartLine />
+            <FaChartLine aria-hidden="true" />
             <span className="btn-text">My Stats</span>
           </button>
 
@@ -207,7 +291,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, initialUser = nu
             title="Sign in to sync progress"
             aria-label="Sign in to sync progress"
           >
-            <FaSignInAlt />
+            <FaSignInAlt aria-hidden="true" />
             <span className="btn-text">Sign In</span>
           </button>
         </div>
