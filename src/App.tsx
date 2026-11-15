@@ -11,6 +11,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import frenchData from './data/frenchData';
 import { initVoices, cancelAllSpeech } from './utils/speech';
+import { getScrollBehavior } from './utils/useModalAccessibility';
 
 const SECTION_META: Record<string, { title: string; description: string }> = {
   alphabet: {
@@ -105,7 +106,6 @@ const updateMeta = (section: string) => {
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>(getSectionFromPath);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [speechInitialized, setSpeechInitialized] = useState(false);
 
   useEffect(() => {
@@ -113,7 +113,7 @@ const App: React.FC = () => {
       const section = getSectionFromPath();
       setActiveSection(section);
       updateMeta(section);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: getScrollBehavior() });
     };
     window.addEventListener('popstate', onPopState);
     updateMeta(activeSection);
@@ -162,10 +162,6 @@ const App: React.FC = () => {
     });
   };
 
-  const closeMenu = () => {
-    setMenuOpen(false);
-  };
-
   const handleSectionChange = (section: string) => {
     cancelAllSpeech();
 
@@ -184,17 +180,16 @@ const App: React.FC = () => {
     updateMeta(section);
 
     setActiveSection(section);
-    closeMenu();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: getScrollBehavior() });
   };
 
   const renderActiveSection = () => {
     if (!speechInitialized) {
       return (
-        <div className="section loading-section">
+        <div className="section loading-section" role="status" aria-live="polite">
           <h2>Loading French Audio</h2>
           <p className="loading-message">Initializing French voice capabilities. This may take a moment...</p>
-          <div className="loading-spinner"></div>
+          <div className="loading-spinner" aria-hidden="true"></div>
         </div>
       );
     }
@@ -251,66 +246,73 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <header>
         <div className="header-content">
-          <h1
-            onClick={() => handleSectionChange('alphabet')}
-            style={{ cursor: 'pointer' }}
-            title="Return to French alphabet lessons"
-          >
-            <svg
-              className="app-emblem french-emblem french-flag"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-label="Basic French logo"
-              role="img"
+          <h1>
+            <button
+              type="button"
+              className="brand-home-button"
+              onClick={() => handleSectionChange('alphabet')}
+              title="Return to alphabet lessons"
             >
-              <defs>
-                <linearGradient id="frEmblemBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#1e3a8a" />
-                  <stop offset="50%" stopColor="#1e1b4b" />
-                  <stop offset="100%" stopColor="#0f172a" />
-                </linearGradient>
-                <linearGradient id="frGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fde047" />
-                  <stop offset="60%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-              </defs>
-              <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#frEmblemBg)" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" />
-              <g transform="translate(5, 5)">
+              <svg
+                className="app-emblem french-emblem french-flag"
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <defs>
-                  <clipPath id="frFlagClip">
-                    <rect x="0" y="0" width="13" height="9" rx="2" />
-                  </clipPath>
+                  <linearGradient id="frEmblemBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e3a8a" />
+                    <stop offset="50%" stopColor="#1e1b4b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                  <linearGradient id="frGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fde047" />
+                    <stop offset="60%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#d97706" />
+                  </linearGradient>
                 </defs>
-                <rect x="-0.5" y="-0.5" width="14" height="10" rx="2.5" fill="rgba(0, 0, 0, 0.45)" />
-                <rect x="0" y="0" width="13" height="9" rx="2" fill="#ffffff" />
-                <g clipPath="url(#frFlagClip)">
-                  <rect x="0" y="0" width="4.33" height="9" fill="#0055a5" />
-                  <rect x="4.33" y="0" width="4.34" height="9" fill="#ffffff" />
-                  <rect x="8.67" y="0" width="4.33" height="9" fill="#ef4135" />
+                <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#frEmblemBg)" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" />
+                <g transform="translate(5, 5)">
+                  <defs>
+                    <clipPath id="frFlagClip">
+                      <rect x="0" y="0" width="13" height="9" rx="2" />
+                    </clipPath>
+                  </defs>
+                  <rect x="-0.5" y="-0.5" width="14" height="10" rx="2.5" fill="rgba(0, 0, 0, 0.45)" />
+                  <rect x="0" y="0" width="13" height="9" rx="2" fill="#ffffff" />
+                  <g clipPath="url(#frFlagClip)">
+                    <rect x="0" y="0" width="4.33" height="9" fill="#0055a5" />
+                    <rect x="4.33" y="0" width="4.34" height="9" fill="#ffffff" />
+                    <rect x="8.67" y="0" width="4.33" height="9" fill="#ef4135" />
+                  </g>
+                  <rect x="0" y="0" width="13" height="9" rx="2" fill="none" stroke="#ffffff" strokeWidth="0.8" />
                 </g>
-                <rect x="0" y="0" width="13" height="9" rx="2" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-              </g>
-              <g transform="translate(0, 3)">
-                <path d="M24 13L8 20.5L24 28L40 20.5L24 13Z" fill="url(#frGoldGrad)" />
-                <path
-                  d="M14 24.5V32C14 35.5 18 38 24 38C30 38 34 35.5 34 32V24.5"
-                  stroke="#ffffff"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <path d="M40 21V30.5" stroke="url(#frGoldGrad)" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="40" cy="31.5" r="1.5" fill="url(#frGoldGrad)" />
-              </g>
-            </svg>
-            <span className="brand-title-group">
-              <span className="brand-title-main">Basic French</span>
-              <span className="brand-parent-tag">by Basic Language School</span>
-            </span>
+                <g transform="translate(0, 3)">
+                  <path d="M24 13L8 20.5L24 28L40 20.5L24 13Z" fill="url(#frGoldGrad)" />
+                  <path
+                    d="M14 24.5V32C14 35.5 18 38 24 38C30 38 34 35.5 34 32V24.5"
+                    stroke="#ffffff"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path d="M40 21V30.5" stroke="url(#frGoldGrad)" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="40" cy="31.5" r="1.5" fill="url(#frGoldGrad)" />
+                </g>
+              </svg>
+              <span className="brand-title-group">
+                <span className="brand-title-main">Basic French</span>
+                <span className="brand-parent-tag">by Basic Language School</span>
+              </span>
+            </button>
           </h1>
           <div className="header-actions">
             <a
@@ -318,14 +320,14 @@ const App: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="header-action-btn language-hub-pill"
-              title="Explore 15+ world languages on Basic Language School"
-              aria-label="Explore 15+ world languages on Basic Language School"
+              title="15+ Languages — Explore Basic Language School"
+              aria-label="15+ Languages — Explore 15+ world languages on Basic Language School"
             >
               <span aria-hidden="true">🌐</span>
               <span className="hub-pill-text">15+ Languages</span>
             </a>
             {installPrompt && (
-              <button onClick={handleInstallClick} className="install-button">
+              <button type="button" onClick={handleInstallClick} className="install-button">
                 Install App
               </button>
             )}
@@ -335,12 +337,10 @@ const App: React.FC = () => {
         <Navigation
           activeSection={activeSection}
           setActiveSection={handleSectionChange}
-          isOpen={menuOpen}
-          _onClose={closeMenu}
         />
       </header>
 
-      <main tabIndex={-1}>
+      <main id="main-content" tabIndex={-1}>
         {renderActiveSection()}
       </main>
 

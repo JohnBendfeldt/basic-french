@@ -31,12 +31,12 @@ const Alphabet: React.FC<AlphabetProps> = ({ data }) => {
           const wordMeaning = item.meaning || '';
 
           return (
-            <div className="alphabet-card" key={index}>
+            <div className="alphabet-card" key={item.letter || index}>
               <div className="letter-container">
                 <div className="letter-header">
                   <div className="letter-pair">
-                    <span className="letter-uppercase">{item.letter}</span>
-                    <span className="letter-lowercase">{item.letter.toLowerCase()}</span>
+                    <span className="letter-uppercase" lang="fr">{item.letter}</span>
+                    <span className="letter-lowercase" lang="fr">{item.letter.toLowerCase()}</span>
                   </div>
                   <div className="pronunciation-button-wrapper">
                     <PronunciationButton
@@ -47,7 +47,7 @@ const Alphabet: React.FC<AlphabetProps> = ({ data }) => {
                   </div>
                 </div>
 
-                <div className="letter-underline"></div>
+                <div className="letter-underline" aria-hidden="true"></div>
               </div>
 
               <div className="pronunciation">
@@ -62,18 +62,19 @@ const Alphabet: React.FC<AlphabetProps> = ({ data }) => {
                   {item.icon && (
                     <button
                       type="button"
+                      tabIndex={-1}
                       className="example-icon-badge"
                       title={`Hear French pronunciation for ${exampleWord}`}
                       aria-label={`Pronounce ${exampleWord}`}
                       onClick={() => handleBadgeSpeak(exampleWord)}
                     >
-                      {item.icon}
+                      <span aria-hidden="true">{item.icon}</span>
                     </button>
                   )}
                   <div className="example-details">
                     <div className="example-word-row">
                       <strong>Example:</strong>
-                      <span className="example-word">{exampleWord}</span>
+                      <span className="example-word" lang="fr">{exampleWord}</span>
                       <PronunciationButton
                         text={exampleWord}
                         className="example-pronunciation"
@@ -82,7 +83,7 @@ const Alphabet: React.FC<AlphabetProps> = ({ data }) => {
                       />
                     </div>
                     {wordMeaning && (
-                      <span className="example-translation">({wordMeaning})</span>
+                      <span className="example-translation" lang="en">({wordMeaning})</span>
                     )}
                   </div>
                 </div>

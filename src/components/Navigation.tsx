@@ -3,15 +3,14 @@ import React from 'react';
 interface NavigationProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
-  isOpen: boolean;
-  _onClose: () => void;
+  isOpen?: boolean;
+  _onClose?: () => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({
   activeSection,
   setActiveSection,
-  isOpen,
-  _onClose,
+  isOpen = false,
 }) => {
   const navItems = [
     { id: 'alphabet', label: 'Alphabet' },
@@ -21,23 +20,33 @@ const Navigation: React.FC<NavigationProps> = ({
     { id: 'quiz', label: 'Quiz' },
   ];
 
-  const isActive = (id: string) =>
+  const checkActive = (id: string) =>
     id === 'numbers'
       ? activeSection === 'numbers' || activeSection === 'time'
       : activeSection === id;
 
+  const handleNavClick = (id: string) => {
+    setActiveSection(id);
+  };
+
   return (
     <nav className={`navigation ${isOpen ? 'open' : ''}`} aria-label="Main navigation">
       <ul>
-        {navItems.map(item => (
-          <li
-            key={item.id}
-            className={isActive(item.id) ? 'active' : ''}
-            onClick={() => setActiveSection(item.id)}
-          >
-            {item.label}
-          </li>
-        ))}
+        {navItems.map(item => {
+          const isActive = checkActive(item.id);
+          return (
+            <li key={item.id} className={isActive ? 'active' : ''}>
+              <button
+                type="button"
+                className={`nav-tab-btn ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={() => handleNavClick(item.id)}
+              >
+                {item.label}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
