@@ -1,9 +1,13 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 
 describe('Basic French App Shell', () => {
-  it('renders header brand, French alphabet section, and Basic Language School links', async () => {
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it('renders header brand, French alphabet section, Basic Language School links, and GitHub link', async () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /Basic French/i })).toBeInTheDocument();
@@ -21,8 +25,21 @@ describe('Basic French App Shell', () => {
     const footerHubLink = screen.getByRole('link', { name: /^Basic Language School$/i });
     expect(footerHubLink).toHaveAttribute('href', 'https://basiclanguage.school');
 
+    const footerGithubLink = screen.getByRole('link', { name: /^GitHub$/i });
+    expect(footerGithubLink).toHaveAttribute('href', 'https://github.com/JohnBendfeldt/basic-french');
+    expect(footerGithubLink).toHaveAttribute('rel', 'noopener noreferrer');
+
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /French Alphabet & Phonetics/i })).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole('link', { name: /Terms of Service/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Terms of Service', level: 2 })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: /MIT License/i })).toHaveAttribute(
+      'href',
+      'https://github.com/JohnBendfeldt/basic-french/blob/main/LICENSE'
+    );
   });
 });

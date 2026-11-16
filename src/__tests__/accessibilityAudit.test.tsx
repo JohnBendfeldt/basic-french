@@ -635,7 +635,7 @@ describe('WCAG 2.1 / 2.2 Level AA Accessibility Audit & Behavioral Suite', () =>
 
       const menu = screen.getByRole('menu');
       const items = within(menu).getAllByRole('menuitem');
-      expect(items.length).toBe(5);
+      expect(items.length).toBe(6);
       expect(document.activeElement).toBe(items[0]);
 
       fireEvent.keyDown(menu, { key: 'ArrowDown' });
