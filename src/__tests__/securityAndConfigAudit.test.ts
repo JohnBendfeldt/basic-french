@@ -18,6 +18,8 @@ describe('Production Security, Netlify Pre-Deploy Gate & PostgreSQL RLS Audit', 
     expect(netlifyToml).toContain("script-src 'self'");
     expect(netlifyToml).toContain("manifest-src 'self'");
     expect(netlifyToml).toContain('for = "/*.html"');
+    const globalHeadersBlock = netlifyToml.split('for = "/sitemap.xml"')[0];
+    expect(globalHeadersBlock).toContain('Cache-Control = "no-cache, no-store, must-revalidate"');
     expect(netlifyToml).not.toContain("'unsafe-inline' 'unsafe-eval'");
   });
 
