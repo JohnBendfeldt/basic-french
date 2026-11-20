@@ -6,6 +6,7 @@
     <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1d4ed8" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
     <!-- Anti-caching for HTML document: ensures browsers always check network for latest bundles -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -14,21 +15,30 @@
 
     <!-- Primary SEO -->
     <title>Basic French | Free Online French for Beginners</title>
-    <meta name="description" content="Learn basic French online for free at basicfrench.org. Master the French alphabet & pronunciation, essential phrases, numbers & telling time, and everyday vocabulary with studio neural audio and interactive quizzes." />
-    <meta name="keywords" content="basic french, learn french online, free french, french for beginners, french alphabet, french pronunciation, basic french phrases, french numbers, french vocabulary, free french lessons, basicfrench.org" />
-    <link rel="canonical" href="https://basicfrench.org" />
+    <meta name="description" content="Learn basic French online for free. Master the French alphabet, essential phrases, numbers &amp; telling time, and vocabulary with studio neural audio and quizzes." />
+    <meta name="keywords" content="basic french, learn french online, free french, french for beginners, french alphabet, french pronunciation, basic french phrases, french numbers, telling time in french, french vocabulary, free french lessons, basicfrench.org" />
+    <link rel="canonical" href="https://basicfrench.org/" />
 
     <!-- Open Graph (Facebook, LinkedIn, etc.) -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://basicfrench.org" />
+    <meta property="og:url" content="https://basicfrench.org/" />
     <meta property="og:site_name" content="Basic French" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content="Basic French | Free Online French for Beginners" />
-    <meta property="og:description" content="Learn basic French online for free. Study the French alphabet, essential phrases, numbers & time, and common words with studio neural audio and adaptive quizzes." />
+    <meta property="og:description" content="Learn basic French online for free. Study the French alphabet, essential phrases, numbers &amp; time, and common words with studio neural audio and adaptive quizzes." />
     <meta property="og:image" content="https://basicfrench.org/og-image.png?v=2" />
+    <meta property="og:image:secure_url" content="https://basicfrench.org/og-image.png?v=2" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Basic French interactive phonetics, vocabulary, and quiz app preview" />
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Basic French | Free Online French for Beginners" />
+    <meta name="twitter:description" content="Learn basic French online for free. Study the French alphabet, essential phrases, numbers &amp; time, and common words with studio neural audio and adaptive quizzes." />
     <meta name="twitter:image" content="https://basicfrench.org/og-image.png?v=2" />
+    <meta name="twitter:image:alt" content="Basic French interactive phonetics, vocabulary, and quiz app preview" />
 
     <!-- PWA -->
     <link rel="apple-touch-icon" href="/logo192.png" />
@@ -42,35 +52,95 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Basic French",
-      "alternateName": "Basic French Learning",
-      "url": "https://basicfrench.org",
-      "description": "Learn basic French online for free. Study the French alphabet, essential phrases, numbers & telling time, and common words with studio neural audio and adaptive quizzes.",
-      "applicationCategory": "EducationalApplication",
-      "operatingSystem": "Any",
-      "browserRequirements": "Requires JavaScript",
-      "inLanguage": ["en", "fr"],
-      "isAccessibleForFree": true,
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "educationalLevel": "Beginner",
-      "teaches": "French language",
-      "audience": {
-        "@type": "EducationalAudience",
-        "educationalRole": "student",
-        "audienceType": "French language beginners"
-      },
-      "featureList": [
-        "French Alphabet & Phonetics with neural pronunciation",
-        "Essential French Phrases with tap-to-reveal translations",
-        "French Numbers & Telling Time",
-        "Common French Vocabulary",
-        "Interactive Quiz with French accent helpers",
-        "Offline Progressive Web App support"
+      "@graph": [
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://basiclanguage.school/#organization",
+          "name": "Basic Language School",
+          "url": "https://basiclanguage.school/",
+          "logo": "https://basiclanguage.school/logo512.png",
+          "sameAs": [
+            "https://basicenglish.school/",
+            "https://basicfrench.org/",
+            "https://basicrussian.org/",
+            "https://github.com/JohnBendfeldt/basic-french",
+            "https://github.com/JohnBendfeldt/basic-language-school"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://basicfrench.org/#website",
+          "name": "Basic French",
+          "alternateName": "Basic French Learning",
+          "url": "https://basicfrench.org/",
+          "description": "Free interactive French phonetics, phrases, numbers, telling time, vocabulary, and quiz web app for beginners.",
+          "inLanguage": ["en", "fr"],
+          "publisher": {
+            "@id": "https://basiclanguage.school/#organization"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://basicfrench.org/#app",
+          "name": "Basic French",
+          "alternateName": "Basic French Learning",
+          "url": "https://basicfrench.org/",
+          "image": "https://basicfrench.org/og-image.png?v=2",
+          "description": "Learn basic French online for free. Study the French alphabet, essential phrases, numbers & telling time, and common words with studio neural audio and adaptive quizzes.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript",
+          "inLanguage": ["en", "fr"],
+          "isAccessibleForFree": true,
+          "provider": {
+            "@id": "https://basiclanguage.school/#organization"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "educationalLevel": "Beginner",
+          "teaches": "French language",
+          "audience": {
+            "@type": "EducationalAudience",
+            "educationalRole": "student",
+            "audienceType": "French language beginners"
+          },
+          "featureList": [
+            "French Alphabet & Phonetics with neural pronunciation",
+            "Essential French Phrases with tap-to-reveal translations",
+            "French Numbers & Telling Time",
+            "Common French Vocabulary",
+            "Interactive Quiz with French accent helpers",
+            "Offline Progressive Web App support"
+          ]
+        },
+        {
+          "@type": "Course",
+          "@id": "https://basicfrench.org/#course",
+          "name": "Free Online Basic French Course for Beginners",
+          "description": "Self-paced interactive French beginner course covering the 26-letter French alphabet and nasal vowels, survival phrases, numbers 0–1,000, telling time, everyday vocabulary, and accent-forgiving quizzes with studio neural audio.",
+          "url": "https://basicfrench.org/",
+          "inLanguage": ["en", "fr"],
+          "educationalLevel": "Beginner",
+          "teaches": "French phonetics, pronunciation, essential phrases, numbers, telling time, and core vocabulary",
+          "isAccessibleForFree": true,
+          "provider": {
+            "@id": "https://basiclanguage.school/#organization"
+          },
+          "offers": {
+            "@type": "Offer",
+            "category": "Free",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "hasCourseInstance": {
+            "@type": "CourseInstance",
+            "courseMode": "online",
+            "courseWorkload": "PT2H"
+          }
+        }
       ]
     }
     </script>
@@ -81,15 +151,19 @@
       <p>
         Learn basic French online for free at basicfrench.org. Study the French alphabet,
         essential phrases, numbers &amp; time, common words, and pronunciation with interactive
-        exercises. Please enable JavaScript to use the full app.
+        exercises and studio neural audio. Please enable JavaScript to use the full app.
       </p>
-      <nav>
+      <nav aria-label="Lessons and resources">
         <ul>
-          <li><a href="/alphabet">French Alphabet – Learn all 26 letters with pronunciation and examples</a></li>
+          <li><a href="/alphabet">French Alphabet &amp; Phonetics – Learn all 26 letters with pronunciation and examples</a></li>
           <li><a href="/phrases">Basic French Phrases – Essential greetings and survival expressions</a></li>
-          <li><a href="/numbers">French Numbers &amp; Time – Count in French and tell time</a></li>
+          <li><a href="/numbers">French Numbers – Count from 0 to 1,000 in French</a></li>
+          <li><a href="/time">Telling Time in French – Learn clock expressions and grammar rules</a></li>
           <li><a href="/words">Common French Words – Build everyday French vocabulary</a></li>
-          <li><a href="/quiz">French Quiz – Test your knowledge</a></li>
+          <li><a href="/quiz">French Quiz – Test your knowledge with accent-forgiving grading</a></li>
+          <li><a href="/privacy">Privacy Policy</a></li>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="https://basiclanguage.school/">Basic Language School – Learn 15 World Languages Free</a></li>
         </ul>
       </nav>
     </noscript>

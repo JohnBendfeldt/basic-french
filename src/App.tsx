@@ -90,6 +90,12 @@ const getSectionFromPath = (): string => {
 const updateMeta = (section: string) => {
   const safeSection = hasOwn(SECTION_META, section) ? section : 'alphabet';
   const meta = SECTION_META[safeSection];
+  const currentPath = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+  const canonicalUrl =
+    currentPath === '/' && safeSection === 'alphabet'
+      ? 'https://basicfrench.org/'
+      : `https://basicfrench.org${hasOwn(SECTION_TO_PATH, section) ? SECTION_TO_PATH[section] : '/alphabet'}`;
+
   document.title = meta.title;
   const descTag = document.querySelector('meta[name="description"]');
   if (descTag) descTag.setAttribute('content', meta.description);
@@ -97,9 +103,15 @@ const updateMeta = (section: string) => {
   if (ogTitle) ogTitle.setAttribute('content', meta.title);
   const ogDesc = document.querySelector('meta[property="og:description"]');
   if (ogDesc) ogDesc.setAttribute('content', meta.description);
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+  const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twitterTitle) twitterTitle.setAttribute('content', meta.title);
+  const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+  if (twitterDesc) twitterDesc.setAttribute('content', meta.description);
   const canonical = document.querySelector('link[rel="canonical"]');
   if (canonical) {
-    canonical.setAttribute('href', `https://basicfrench.org${hasOwn(SECTION_TO_PATH, section) ? SECTION_TO_PATH[section] : '/alphabet'}`);
+    canonical.setAttribute('href', canonicalUrl);
   }
 };
 

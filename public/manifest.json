@@ -1,4 +1,6 @@
 {
+  "id": "/",
+  "lang": "en",
   "short_name": "Basic French",
   "name": "Basic French — Learn French Online",
   "description": "Free interactive French learning app with studio neural audio, alphabet & pronunciation, phrases, numbers & time, vocabulary, and adaptive quizzes.",
@@ -29,6 +31,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["education", "learning", "languages"],
   "theme_color": "#1d4ed8",
   "background_color": "#f8fafc"
 }
