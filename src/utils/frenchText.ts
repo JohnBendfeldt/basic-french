@@ -9,9 +9,9 @@ export const FRENCH_ACCENT_CHARS: readonly string[] = [
 
 export const FRENCH_ACCENT_TIPS: ReadonlyArray<{ accent: string; name: string; example: string }> = [
   { accent: 'é', name: 'Accent aigu', example: 'café, été (pronounced "ay")' },
-  { accent: 'è / ê', name: 'Grave & Circonflexe', example: 'père, fête (open "eh")' },
+  { accent: 'è / ê', name: 'Accent grave & circonflexe', example: 'père, fête (open "eh")' },
   { accent: 'ç', name: 'Cédille', example: 'ça va, français (soft "s" before a/o/u)' },
-  { accent: 'à / ù', name: 'Distinguishing Grave', example: 'à (to/at) vs a (has), où (where) vs ou (or)' },
+  { accent: 'à / ù', name: 'Accent grave (à / ù)', example: 'à (to/at) vs a (has), où (where) vs ou (or)' },
   { accent: 'œ', name: 'Ligature e-dans-l’o', example: 'cœur, sœur, œuf' },
 ];
 
@@ -59,13 +59,15 @@ export const normalizeFrenchText = (text: string, keepAccents = true): string =>
  */
 export const normalizeEnglishAnswer = (text: string): string => {
   let s = stripFrenchAccents(text.toLowerCase().trim());
-  s = s.replace(/’/g, "'").replace(/\s*\([^)]*\)\s*/g, ' ');
+  s = s.replace(/[\u2018\u2019]/g, "'").replace(/\s*\([^)]*\)\s*/g, ' ');
 
   const contractions: Array<[RegExp, string]> = [
     [/\b(what's|whats)\b/g, 'what is'],
     [/\b(where's|wheres)\b/g, 'where is'],
     [/\b(it's|its)\b/g, 'it is'],
     [/\b(i'm|im)\b/g, 'i am'],
+    [/\b(i'll|ill)\b/g, 'i will'],
+    [/\b(i'd|id)\b/g, 'i would'],
     [/\b(you're|youre)\b/g, 'you are'],
     [/\b(don't|dont)\b/g, 'do not'],
     [/\b(can't|cant)\b/g, 'cannot'],
@@ -78,11 +80,12 @@ export const normalizeEnglishAnswer = (text: string): string => {
   s = s.replace(/[.,/#!$%^&*;:{}=\-_`~()?'"]/g, ' ').replace(/\s+/g, ' ').trim();
 
   const synonyms: Array<[RegExp, string]> = [
-    [/\b(restrooms|restroom|toilets|toilet|washroom|wc)\b/g, 'bathroom'],
+    [/\b(restrooms|restroom|bathrooms|toilets|toilet|washrooms|washroom|wc)\b/g, 'bathroom'],
     [/\b(hi|hey)\b/g, 'hello'],
     [/\b(thanks|many thanks)\b/g, 'thank you'],
     [/\b(bill|check)\b/g, 'check'],
     [/\b(email|e mail)\b/g, 'email'],
+    [/\bok\b/g, 'okay'],
   ];
   for (const [re, rep] of synonyms) {
     s = s.replace(re, rep);
@@ -147,15 +150,16 @@ export const FRENCH_NUMBER_EQUIVALENTS: Record<string, string[]> = {
 };
 
 export const checkFrenchNumberEquivalence = (userRaw: string, targetRaw: string): boolean => {
-  const u = normalizeFrenchText(userRaw, false).replace(/,/g, '');
-  const t = normalizeFrenchText(targetRaw, false).replace(/,/g, '');
+  // Collapse thousands separators (e.g. "1,000" -> "1000") before punctuation normalization
+  const u = normalizeFrenchText(userRaw.replace(/(\d),(\d)/g, '$1$2'), false);
+  const t = normalizeFrenchText(targetRaw.replace(/(\d),(\d)/g, '$1$2'), false);
   if (!u || !t) return false;
   if (u === t) return true;
 
   for (const [digit, forms] of Object.entries(FRENCH_NUMBER_EQUIVALENTS)) {
     const allForms = [digit, ...forms.map(f => normalizeFrenchText(f, false))];
     const uMatch = allForms.includes(u);
-    const tMatch = allForms.includes(t) || t.split(' ').includes(digit);
+    const tMatch = allForms.includes(t);
     if (uMatch && tMatch) return true;
   }
   return false;

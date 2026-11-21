@@ -174,7 +174,8 @@ const NumbersAndTime: React.FC<NumbersAndTimeProps> = ({
                   <span className="guide-badge">Rule 1</span>
                   <h4 lang="fr">Il est ... heure(s)</h4>
                   <p>
-                    Always include <em lang="fr">heure</em> (singular for 1:00, plural for 2+):
+                    Include <em lang="fr">heure</em> (singular for 1:00, plural for 2+; omitted with{' '}
+                    <em lang="fr">midi</em> / <em lang="fr">minuit</em>):
                   </p>
                   <ul>
                     <li>
