@@ -8,7 +8,7 @@ import { AlphabetItem, PhraseItem, AppData } from '../types/index';
 const alphabet: AlphabetItem[] = [
   {
     "letter": "A",
-    "pronunciation": "/ɑ/",
+    "pronunciation": "/a/",
     "example": "as in father / calm",
     "word": "Ami",
     "meaning": "Friend",
@@ -42,9 +42,9 @@ const alphabet: AlphabetItem[] = [
     "letter": "E",
     "pronunciation": "/ə/",
     "example": "as in the / her (neutral vowel /ə/)",
-    "word": "Eau",
-    "meaning": "Water",
-    "icon": "💧"
+    "word": "Fenêtre",
+    "meaning": "Window",
+    "icon": "🪟"
   },
   {
     "letter": "F",
@@ -122,9 +122,9 @@ const alphabet: AlphabetItem[] = [
     "letter": "O",
     "pronunciation": "/o/",
     "example": "as in boat / open",
-    "word": "Oui",
-    "meaning": "Yes",
-    "icon": "✅"
+    "word": "Orange",
+    "meaning": "Orange",
+    "icon": "🍊"
   },
   {
     "letter": "P",
@@ -145,7 +145,7 @@ const alphabet: AlphabetItem[] = [
   {
     "letter": "R",
     "pronunciation": "/ɛʁ/",
-    "example": "as in run (guttural French throat r)",
+    "example": "uvular French throat r (rolled at back of throat)",
     "word": "Rue",
     "meaning": "Street",
     "icon": "🛣️"
@@ -169,10 +169,10 @@ const alphabet: AlphabetItem[] = [
   {
     "letter": "U",
     "pronunciation": "/y/",
-    "example": "as in cute / French rounded u",
-    "word": "Un",
-    "meaning": "One",
-    "icon": "1️⃣"
+    "example": "say \"ee\" with rounded lips (French rounded u)",
+    "word": "Urgence",
+    "meaning": "Emergency",
+    "icon": "🚑"
   },
   {
     "letter": "V",
@@ -185,7 +185,7 @@ const alphabet: AlphabetItem[] = [
   {
     "letter": "W",
     "pronunciation": "/dubləve/",
-    "example": "as in wagon / voice (v sound)",
+    "example": "as in voice (v sound in French wagon)",
     "word": "Wagon",
     "meaning": "Wagon / Car",
     "icon": "🚃"
@@ -193,7 +193,7 @@ const alphabet: AlphabetItem[] = [
   {
     "letter": "X",
     "pronunciation": "/iks/",
-    "example": "as in box / extra",
+    "example": "as in exam (/ɡz/) or box (/ks/)",
     "word": "Exemple",
     "meaning": "Example",
     "icon": "📝"
@@ -234,7 +234,7 @@ const basicPhrases: PhraseItem[] = [
   {
     "phrase": "Salut",
     "translation": "Hi / Bye (informal)",
-    "pronunciation": "sah-LOO",
+    "pronunciation": "sah-LEW",
     "category": "Greetings",
     "icon": "🤙"
   },
@@ -255,7 +255,7 @@ const basicPhrases: PhraseItem[] = [
   {
     "phrase": "Ça va bien, merci",
     "translation": "I am doing well, thank you",
-    "pronunciation": "sah vah BYAHN, mair-SEE",
+    "pronunciation": "sah vah BYEHN, mair-SEE",
     "category": "Conversation",
     "icon": "😊"
   },
@@ -331,7 +331,7 @@ const basicPhrases: PhraseItem[] = [
   },
   {
     "phrase": "L'addition, s'il vous plaît",
-    "translation": "The bill / check, please",
+    "translation": "The bill, please / The check, please",
     "pronunciation": "lah-dee-SYOHN seel voo PLEH",
     "category": "Dining",
     "icon": "🧾"
@@ -381,14 +381,14 @@ const basicPhrases: PhraseItem[] = [
   {
     "phrase": "Voyez-vous mon écran ?",
     "translation": "Can you see my screen?",
-    "pronunciation": "vwah-yay voo mohn ay-KRAHN",
+    "pronunciation": "vwah-yay voo moh-nay-KRAHN",
     "category": "Tech",
     "icon": "🖥️"
   },
   {
     "phrase": "Quel est le mot de passe du Wi-Fi ?",
     "translation": "What is the Wi-Fi password?",
-    "pronunciation": "kehl eh luh moh duh pahs dew wee-fee",
+    "pronunciation": "kehl eh luh moh duh pahs dew wee-FEE",
     "category": "Tech",
     "icon": "📶"
   },
@@ -416,7 +416,7 @@ const basicPhrases: PhraseItem[] = [
   {
     "phrase": "J'ai besoin d'un médecin",
     "translation": "I need a doctor",
-    "pronunciation": "zhay buh-ZWAN dahn mayd-SAHN",
+    "pronunciation": "zhay buh-ZWEHN dahn mayd-SEHN",
     "category": "Health",
     "icon": "🩺"
   },
@@ -451,7 +451,7 @@ const basicPhrases: PhraseItem[] = [
   {
     "phrase": "J'ai besoin d'un taxi",
     "translation": "I need a taxi",
-    "pronunciation": "zhay buh-ZWAN dahn tahk-SEE",
+    "pronunciation": "zhay buh-ZWEHN dahn tahk-SEE",
     "category": "Travel",
     "icon": "🚕"
   },
@@ -524,7 +524,7 @@ const numbers: PhraseItem[] = [
   {
     "phrase": "Cinq",
     "translation": "5 (Five)",
-    "pronunciation": "sank",
+    "pronunciation": "sehnk",
     "category": "Numbers 0-10",
     "icon": "5️⃣"
   },
@@ -594,7 +594,7 @@ const numbers: PhraseItem[] = [
   {
     "phrase": "Quinze",
     "translation": "15 (Fifteen)",
-    "pronunciation": "kanz",
+    "pronunciation": "kehnz",
     "category": "Numbers 11-20",
     "icon": "🔢"
   },
@@ -629,7 +629,7 @@ const numbers: PhraseItem[] = [
   {
     "phrase": "Vingt",
     "translation": "20 (Twenty)",
-    "pronunciation": "vahn",
+    "pronunciation": "vehn",
     "category": "Tens",
     "icon": "🔢"
   },
@@ -650,7 +650,7 @@ const numbers: PhraseItem[] = [
   {
     "phrase": "Cinquante",
     "translation": "50 (Fifty)",
-    "pronunciation": "san-KAHNT",
+    "pronunciation": "sehn-KAHNT",
     "category": "Tens",
     "icon": "🔢"
   },
@@ -671,14 +671,14 @@ const numbers: PhraseItem[] = [
   {
     "phrase": "Quatre-vingts",
     "translation": "80 (Eighty)",
-    "pronunciation": "kat-ruh-VAHN",
+    "pronunciation": "kat-ruh-VEHN",
     "category": "Tens",
     "icon": "🔢"
   },
   {
     "phrase": "Quatre-vingt-dix",
     "translation": "90 (Ninety)",
-    "pronunciation": "kat-ruh-vahn-DEES",
+    "pronunciation": "kat-ruh-vehn-DEES",
     "category": "Tens",
     "icon": "🔢"
   },
@@ -709,7 +709,7 @@ const time: PhraseItem[] = [
   {
     "phrase": "Il est une heure pile",
     "translation": "It is one o'clock on the dot",
-    "pronunciation": "eel eh oon er peel",
+    "pronunciation": "eel eh ewn er peel",
     "category": "Hour",
     "icon": "🕐"
   },
@@ -737,7 +737,7 @@ const time: PhraseItem[] = [
   {
     "phrase": "Il est cinq heures moins le quart",
     "translation": "It is 4:45 (quarter to five)",
-    "pronunciation": "eel eh san-ker mwan luh KAR",
+    "pronunciation": "eel eh sehn-ker mwehn luh KAR",
     "category": "Minutes",
     "icon": "🕟"
   },
@@ -810,7 +810,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Demain",
     "translation": "Tomorrow",
-    "pronunciation": "duh-MAHN",
+    "pronunciation": "duh-MEHN",
     "category": "Time",
     "icon": "🌅"
   },
@@ -825,14 +825,14 @@ const commonWords: PhraseItem[] = [
     "phrase": "Travail",
     "translation": "Work / Job",
     "pronunciation": "trah-VAHY",
-    "category": "Work",
+    "category": "Business",
     "icon": "💼"
   },
   {
     "phrase": "Bureau",
     "translation": "Office / Desk",
     "pronunciation": "bew-ROH",
-    "category": "Work",
+    "category": "Business",
     "icon": "🏢"
   },
   {
@@ -860,7 +860,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Famille",
     "translation": "Family",
     "pronunciation": "fah-MEE-yuh",
-    "category": "People",
+    "category": "Family",
     "icon": "👨‍👩‍👧"
   },
   {
@@ -888,14 +888,14 @@ const commonWords: PhraseItem[] = [
     "phrase": "Voiture",
     "translation": "Car",
     "pronunciation": "vwah-TYOOR",
-    "category": "Transport",
+    "category": "Travel",
     "icon": "🚗"
   },
   {
     "phrase": "Train",
     "translation": "Train",
-    "pronunciation": "trahn",
-    "category": "Transport",
+    "pronunciation": "trehn",
+    "category": "Travel",
     "icon": "🚆"
   },
   {
@@ -959,7 +959,7 @@ const commonWords: PhraseItem[] = [
     "translation": "New",
     "pronunciation": "noo-VOH",
     "category": "Descriptions",
-    "icon": "✨"
+    "icon": "🆕"
   },
   {
     "phrase": "Vieux",
@@ -972,7 +972,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Soleil",
     "translation": "Sun",
     "pronunciation": "soh-LAY",
-    "category": "Weather",
+    "category": "Nature",
     "icon": "☀️"
   },
   {
@@ -1014,14 +1014,14 @@ const commonWords: PhraseItem[] = [
     "phrase": "Chaud",
     "translation": "Hot",
     "pronunciation": "shoh",
-    "category": "Weather",
+    "category": "Descriptions",
     "icon": "🔥"
   },
   {
     "phrase": "Froid",
     "translation": "Cold",
     "pronunciation": "frwah",
-    "category": "Weather",
+    "category": "Descriptions",
     "icon": "🥶"
   },
   {
@@ -1041,7 +1041,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Internet",
     "translation": "Internet",
-    "pronunciation": "ahn-tehr-NET",
+    "pronunciation": "ehn-tehr-NET",
     "category": "Tech",
     "icon": "🌐"
   },
@@ -1070,7 +1070,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Réunion",
     "translation": "Meeting",
     "pronunciation": "ray-ew-NYOHN",
-    "category": "Tech",
+    "category": "Business",
     "icon": "📅"
   },
   {
@@ -1083,7 +1083,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Lien",
     "translation": "Link",
-    "pronunciation": "lyahn",
+    "pronunciation": "lyehn",
     "category": "Tech",
     "icon": "🔗"
   },
@@ -1181,7 +1181,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Médecin",
     "translation": "Doctor",
-    "pronunciation": "mayd-SAHN",
+    "pronunciation": "mayd-SEHN",
     "category": "Health",
     "icon": "🩺"
   },
@@ -1273,14 +1273,14 @@ const commonWords: PhraseItem[] = [
     "phrase": "Clé",
     "translation": "Key",
     "pronunciation": "klay",
-    "category": "Travel",
+    "category": "Home",
     "icon": "🔑"
   },
   {
     "phrase": "Chambre",
     "translation": "Room",
     "pronunciation": "shahm-bruh",
-    "category": "Travel",
+    "category": "Places",
     "icon": "🛏️"
   },
   {
@@ -1329,7 +1329,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Espèces",
     "translation": "Cash",
     "pronunciation": "ehs-PEHS",
-    "category": "Shopping",
+    "category": "Finance",
     "icon": "💵"
   },
   {
@@ -1410,13 +1410,6 @@ const commonWords: PhraseItem[] = [
     "icon": "📶"
   },
   {
-    "phrase": "E-mail",
-    "translation": "Email",
-    "pronunciation": "ee-MAYL",
-    "category": "Tech",
-    "icon": "📧"
-  },
-  {
     "phrase": "Message",
     "translation": "Message",
     "pronunciation": "meh-SAHZH",
@@ -1446,10 +1439,10 @@ const commonWords: PhraseItem[] = [
   },
   {
     "phrase": "Caméra",
-    "translation": "Camera",
+    "translation": "Camera (video)",
     "pronunciation": "kah-may-RAH",
     "category": "Tech",
-    "icon": "📷"
+    "icon": "🎥"
   },
   {
     "phrase": "Microphone",
@@ -1468,7 +1461,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Imprimante",
     "translation": "Printer",
-    "pronunciation": "eem-pree-MAHNT",
+    "pronunciation": "ehn-pree-MAHNT",
     "category": "Tech",
     "icon": "🖨️"
   },
@@ -1489,7 +1482,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Supprimer",
     "translation": "Delete",
-    "pronunciation": "soo-pree-MAY",
+    "pronunciation": "sew-pree-MAY",
     "category": "Tech",
     "icon": "🗑️"
   },
@@ -1557,23 +1550,9 @@ const commonWords: PhraseItem[] = [
     "icon": "💳"
   },
   {
-    "phrase": "Carte de crédit",
-    "translation": "Credit card",
-    "pronunciation": "kahrt duh kray-DEE",
-    "category": "Shopping",
-    "icon": "💳"
-  },
-  {
-    "phrase": "Bon marché",
-    "translation": "Cheap",
-    "pronunciation": "bohn mahr-SHAY",
-    "category": "Shopping",
-    "icon": "🏷️"
-  },
-  {
     "phrase": "Reçu",
     "translation": "Receipt",
-    "pronunciation": "ruh-SOO",
+    "pronunciation": "ruh-SEW",
     "category": "Shopping",
     "icon": "🧾"
   },
@@ -1586,14 +1565,14 @@ const commonWords: PhraseItem[] = [
   },
   {
     "phrase": "Ouvrir",
-    "translation": "Open",
+    "translation": "To open",
     "pronunciation": "oo-VREER",
     "category": "Tech",
     "icon": "📂"
   },
   {
     "phrase": "Fermer",
-    "translation": "Close",
+    "translation": "To close",
     "pronunciation": "fehr-MAY",
     "category": "Tech",
     "icon": "✖️"
@@ -1608,7 +1587,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Homme",
     "translation": "Man",
-    "pronunciation": "UHM",
+    "pronunciation": "OHM",
     "category": "People",
     "icon": "👨"
   },
@@ -1658,98 +1637,91 @@ const commonWords: PhraseItem[] = [
     "phrase": "Lait",
     "translation": "Milk",
     "pronunciation": "LEH",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🥛"
   },
   {
     "phrase": "Viande",
     "translation": "Meat",
     "pronunciation": "vee-AHND",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🥩"
   },
   {
     "phrase": "Poisson",
     "translation": "Fish",
     "pronunciation": "pwah-SOHN",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🐟"
   },
   {
     "phrase": "Légumes",
     "translation": "Vegetables",
-    "pronunciation": "lay-GOOM",
-    "category": "Food",
+    "pronunciation": "lay-GEWM",
+    "category": "Food & Drink",
     "icon": "🥦"
-  },
-  {
-    "phrase": "Fruits",
-    "translation": "Fruits",
-    "pronunciation": "FRWEE",
-    "category": "Food",
-    "icon": "🍎"
   },
   {
     "phrase": "Riz",
     "translation": "Rice",
     "pronunciation": "REE",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍚"
   },
   {
     "phrase": "Thé",
     "translation": "Tea",
     "pronunciation": "TAY",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍵"
   },
   {
     "phrase": "Bière",
     "translation": "Beer",
     "pronunciation": "BYEHR",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍺"
   },
   {
     "phrase": "Vin",
     "translation": "Wine",
-    "pronunciation": "VAN",
-    "category": "Food",
+    "pronunciation": "VEHN",
+    "category": "Food & Drink",
     "icon": "🍷"
   },
   {
     "phrase": "Sel",
     "translation": "Salt",
     "pronunciation": "SEHL",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🧂"
   },
   {
     "phrase": "Œuf",
     "translation": "Egg",
     "pronunciation": "UHF",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🥚"
   },
   {
     "phrase": "Jus",
     "translation": "Juice",
-    "pronunciation": "ZHOO",
-    "category": "Food",
+    "pronunciation": "ZHEW",
+    "category": "Food & Drink",
     "icon": "🧃"
   },
   {
     "phrase": "Fromage",
     "translation": "Cheese",
     "pronunciation": "froh-MAHZH",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🧀"
   },
   {
     "phrase": "Pomme",
     "translation": "Apple",
-    "pronunciation": "PUHM",
-    "category": "Food",
+    "pronunciation": "POHM",
+    "category": "Food & Drink",
     "icon": "🍏"
   },
   {
@@ -1770,7 +1742,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Aéroport",
     "translation": "Airport",
     "pronunciation": "ah-ay-roh-POHR",
-    "category": "Places",
+    "category": "Travel",
     "icon": "✈️"
   },
   {
@@ -1784,20 +1756,20 @@ const commonWords: PhraseItem[] = [
     "phrase": "Mer",
     "translation": "Sea",
     "pronunciation": "MEHR",
-    "category": "Places",
+    "category": "Nature",
     "icon": "🌊"
   },
   {
     "phrase": "Route / Chemin",
     "translation": "Road",
-    "pronunciation": "ROOT / shuh-MAN",
+    "pronunciation": "ROOT / shuh-MEHN",
     "category": "Places",
     "icon": "🛤️"
   },
   {
     "phrase": "Bus",
     "translation": "Bus",
-    "pronunciation": "BOOS",
+    "pronunciation": "BEWS",
     "category": "Travel",
     "icon": "🚌"
   },
@@ -1841,7 +1813,7 @@ const commonWords: PhraseItem[] = [
     "translation": "Table",
     "pronunciation": "TAH-bluh",
     "category": "Home",
-    "icon": "svg:table"
+    "icon": "🪵"
   },
   {
     "phrase": "Chaise",
@@ -1909,28 +1881,28 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Chien",
     "translation": "Dog",
-    "pronunciation": "SHYAN",
-    "category": "Nature",
+    "pronunciation": "SHYEHN",
+    "category": "Animals",
     "icon": "🐶"
   },
   {
     "phrase": "Chat",
     "translation": "Cat",
     "pronunciation": "SHAH",
-    "category": "Nature",
+    "category": "Animals",
     "icon": "🐱"
   },
   {
     "phrase": "Oiseau",
     "translation": "Bird",
     "pronunciation": "wah-ZOH",
-    "category": "Nature",
+    "category": "Animals",
     "icon": "🐦"
   },
   {
     "phrase": "Lune",
     "translation": "Moon",
-    "pronunciation": "LOON",
+    "pronunciation": "LEWN",
     "category": "Nature",
     "icon": "🌙"
   },
@@ -2064,21 +2036,21 @@ const commonWords: PhraseItem[] = [
     "phrase": "Semaine",
     "translation": "Week",
     "pronunciation": "suh-MEHN",
-    "category": "Calendar",
+    "category": "Time",
     "icon": "🗓️"
   },
   {
     "phrase": "Mois",
     "translation": "Month",
     "pronunciation": "MWAH",
-    "category": "Calendar",
+    "category": "Time",
     "icon": "📆"
   },
   {
     "phrase": "An / Année",
     "translation": "Year",
     "pronunciation": "AHN / ah-NAY",
-    "category": "Calendar",
+    "category": "Time",
     "icon": "🎆"
   },
   {
@@ -2134,56 +2106,56 @@ const commonWords: PhraseItem[] = [
     "phrase": "Tasse",
     "translation": "Cup",
     "pronunciation": "TAHS",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "☕"
   },
   {
     "phrase": "Verre",
     "translation": "Glass (cup)",
     "pronunciation": "VEHR",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🥛"
   },
   {
     "phrase": "Bouilloire",
     "translation": "Kettle",
     "pronunciation": "boo-YWAHR",
-    "category": "Food",
+    "category": "Home",
     "icon": "🫖"
   },
   {
     "phrase": "Huile",
     "translation": "Oil",
     "pronunciation": "WEEL",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🫒"
   },
   {
     "phrase": "Citron",
     "translation": "Lemon",
     "pronunciation": "see-TROHN",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍋"
   },
   {
     "phrase": "Orange",
     "translation": "Orange",
     "pronunciation": "oh-RAHNZH",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍊"
   },
   {
     "phrase": "Yaourt",
     "translation": "Yogurt",
     "pronunciation": "yah-OORT",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🥣"
   },
   {
     "phrase": "Glace",
     "translation": "Ice",
     "pronunciation": "GLAHS",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🧊"
   },
   {
@@ -2203,14 +2175,14 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Silencieux / Calme",
     "translation": "Quiet",
-    "pronunciation": "see-lahn-SYUH / KAHM",
-    "category": "Essentials",
+    "pronunciation": "see-lahn-SYUH / KAHLM",
+    "category": "Descriptions",
     "icon": "🤫"
   },
   {
     "phrase": "Lumière",
     "translation": "Light",
-    "pronunciation": "loo-MYEHR",
+    "pronunciation": "lew-MYEHR",
     "category": "Essentials",
     "icon": "💡"
   },
@@ -2218,7 +2190,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Île",
     "translation": "Island",
     "pronunciation": "EEL",
-    "category": "Travel",
+    "category": "Nature",
     "icon": "🏝️"
   },
   {
@@ -2259,7 +2231,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Comment",
     "translation": "How",
-    "pronunciation": "kuh-MAHN",
+    "pronunciation": "koh-MAHN",
     "category": "Questions",
     "icon": "⚙️"
   },
@@ -2295,7 +2267,7 @@ const commonWords: PhraseItem[] = [
     "phrase": "Police",
     "translation": "Police",
     "pronunciation": "poh-LEES",
-    "category": "Places",
+    "category": "Emergency",
     "icon": "👮"
   },
   {
@@ -2313,31 +2285,24 @@ const commonWords: PhraseItem[] = [
     "icon": "🛂"
   },
   {
-    "phrase": "Chaussure",
-    "translation": "Shoe / Shoes",
-    "pronunciation": "shoh-SYOOR",
-    "category": "Essentials",
-    "icon": "👞"
-  },
-  {
     "phrase": "Fruit",
     "translation": "Fruit",
     "pronunciation": "FRWEE",
-    "category": "Food",
+    "category": "Food & Drink",
     "icon": "🍎"
   },
   {
     "phrase": "Horloge",
-    "translation": "Clock / Watch",
+    "translation": "Wall clock / Clock",
     "pronunciation": "ohr-LOHZH",
-    "category": "Essentials",
-    "icon": "⏰"
+    "category": "Home",
+    "icon": "🕰️"
   },
   {
     "phrase": "Raisin",
     "translation": "Grape",
-    "pronunciation": "reh-ZAN",
-    "category": "Food",
+    "pronunciation": "reh-ZEHN",
+    "category": "Food & Drink",
     "icon": "🍇"
   },
   {
@@ -2350,7 +2315,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Minute",
     "translation": "Minute",
-    "pronunciation": "mee-NOOT",
+    "pronunciation": "mee-NEWT",
     "category": "Time",
     "icon": "⏱️"
   },
@@ -2378,7 +2343,7 @@ const commonWords: PhraseItem[] = [
   {
     "phrase": "Maintenant",
     "translation": "Now",
-    "pronunciation": "man-tuh-NAHN",
+    "pronunciation": "mehn-tuh-NAHN",
     "category": "Time",
     "icon": "⏰"
   },

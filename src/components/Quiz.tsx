@@ -108,11 +108,39 @@ export const gradeQuizAnswer = (
     };
   }
 
-  const rawCandidates = expectedAnswer
-    .split('/')
-    .map(part => part.replace(/\s*\([^)]*\)\s*/g, ' ').trim())
-    .filter(Boolean);
-  const candidates = Array.from(new Set([expectedAnswer.trim(), ...rawCandidates]));
+  const rawParts = expectedAnswer.split('/').map(p => p.trim()).filter(Boolean);
+  const expandedCandidates: string[] = [expectedAnswer.trim()];
+  const EDITORIAL_TAG = /^(?:formal|informal|singular|plural|masculine|feminine|cup|video|lit\.?)$/i;
+
+  for (const part of rawParts) {
+    // Expand French optional feminine "(e)" -> both masculine and feminine spellings (e.g. Enchanté(e) -> Enchanté, Enchantée)
+    if (/\p{L}\(e\)/u.test(part)) {
+      expandedCandidates.push(part.replace(/(\p{L})\(e\)/gu, '$1').trim());
+      expandedCandidates.push(part.replace(/(\p{L})\(e\)/gu, '$1e').trim());
+    }
+    const stripped = part.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    if (stripped) expandedCandidates.push(stripped);
+
+    // Extract substantive parenthetical time expressions (e.g. "It is 3:30 (half past three)")
+    if (isFrenchToEnglish) {
+      const parenMatches = part.matchAll(/\(([^)]+)\)/g);
+      for (const m of parenMatches) {
+        const inner = m[1].trim();
+        if (inner && !EDITORIAL_TAG.test(inner)) {
+          expandedCandidates.push(inner);
+          if (/^it is\s+/i.test(stripped)) {
+            expandedCandidates.push(`It is ${inner}`);
+          }
+        }
+      }
+      const clockMatch = stripped.match(/\b\d{1,2}:\d{2}\b/);
+      if (clockMatch) {
+        expandedCandidates.push(clockMatch[0]);
+      }
+    }
+  }
+  const rawCandidates = rawParts.map(part => part.replace(/\s*\([^)]*\)\s*/g, ' ').trim()).filter(Boolean);
+  const candidates = Array.from(new Set(expandedCandidates.filter(Boolean)));
 
   if (!isFrenchToEnglish) {
     // Learner is typing French
@@ -177,7 +205,11 @@ export const gradeQuizAnswer = (
 
     for (const candidate of candidates) {
       const normCandEn = normalizeEnglishAnswer(candidate);
-      if (normCandEn && normUserEn === normCandEn) {
+      if (
+        normCandEn &&
+        (normUserEn === normCandEn ||
+          (normCandEn.startsWith('to ') && normUserEn === normCandEn.slice(3)))
+      ) {
         return {
           isCorrect: true,
           usedAccentForgiveness: false,
@@ -471,11 +503,14 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
           audioCategory: 'examples',
         };
       }
+      const startsWithLetter = normalizeFrenchText(word, false).startsWith(
+        normalizeFrenchText(item.letter, false)
+      );
       return {
         id: selected.id,
         wordId: selected.wordId,
         type: 'alphabet',
-        prompt: `${meaning} (starts with ${item.letter})`,
+        prompt: `${meaning} (${startsWithLetter ? 'starts with' : 'contains'} ${item.letter})`,
         answer: word,
         hint: `How do you write "${meaning}" in French?`,
         target: word,
@@ -816,12 +851,12 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       await ProgressService.recordQuizSession({
         category: selectedCategory,
         score: sessionScore,
-        totalQuestions: sessionGoal,
+        totalQuestions: sessionAnswered || sessionGoal,
       });
     } catch (err) {
       console.warn('Could not record completed quiz session:', err);
     }
-  }, [selectedCategory, sessionScore, sessionGoal]);
+  }, [selectedCategory, sessionScore, sessionAnswered, sessionGoal]);
 
   const startNewQuizSession = useCallback(
     (newGoal?: number, newCategory?: QuizCategoryFilter) => {
@@ -970,7 +1005,8 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
     : '';
 
   if (isSessionComplete) {
-    const percentage = sessionGoal > 0 ? Math.round((sessionScore / sessionGoal) * 100) : 0;
+    const completedTotal = sessionAnswered > 0 ? sessionAnswered : sessionGoal;
+    const percentage = completedTotal > 0 ? Math.min(100, Math.round((sessionScore / completedTotal) * 100)) : 0;
 
     let headlineTitle = 'Félicitations !';
     let headlinePronunciation = 'fay-lee-see-tah-syohn';
@@ -984,12 +1020,12 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
       recapIcon = <FaTrophy className="recap-icon gold" aria-hidden="true" />;
     } else if (percentage >= 70) {
       headlineTitle = 'Très bien !';
-      headlinePronunciation = 'treh byahn';
+      headlinePronunciation = 'treh byehn';
       headlineEnglish = 'Great job — your French is coming along nicely!';
       recapIcon = <FaStar className="recap-icon silver" aria-hidden="true" />;
     } else if (percentage >= 50) {
       headlineTitle = 'Bon effort !';
-      headlinePronunciation = 'bohn eh-for';
+      headlinePronunciation = 'boh-neh-for';
       headlineEnglish = 'Good effort — keep building momentum!';
       recapIcon = <FaStar className="recap-icon bronze" aria-hidden="true" />;
     } else {
@@ -1052,14 +1088,14 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
               </svg>
               <div className="recap-ring-label">
                 <span className="recap-score-percent">{percentage}%</span>
-                <span className="recap-score-ratio">{sessionScore} / {sessionGoal} correct</span>
+                <span className="recap-score-ratio">{sessionScore} / {completedTotal} correct</span>
               </div>
             </div>
 
             <div className="recap-stats-grid" role="group" aria-label="Session summary stats">
               <div className="recap-stat-card">
                 <span className="stat-label"><span aria-hidden="true">🎯 </span>Goal</span>
-                <span className="stat-value">{sessionGoal} Qs</span>
+                <span className="stat-value">{completedTotal} Qs</span>
               </div>
               <div className="recap-stat-card correct">
                 <span className="stat-label"><span aria-hidden="true">✅ </span>Correct</span>
@@ -1131,6 +1167,9 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                 {CATEGORY_TABS.map((tab, idx) => {
                   const isActive = selectedCategory === tab.id;
                   const countInfo = categoryCounts[tab.id];
+                  const totalCount = countInfo?.total || 0;
+                  const unitBase = tab.id === 'alphabet' ? 'letter' : tab.id === 'basicPhrases' ? 'phrase' : tab.id === 'commonWords' ? 'word' : 'item';
+                  const unitText = `${totalCount} ${totalCount === 1 ? unitBase : `${unitBase}s`}`;
                   return (
                     <button
                       key={tab.id}
@@ -1145,7 +1184,7 @@ const Quiz: React.FC<QuizProps> = ({ data }) => {
                       className={`recap-topic-pill ${isActive ? 'active' : ''}`}
                       onClick={() => handleCategoryChange(tab.id)}
                       onKeyDown={e => handleCategoryTabKeyDown(e, idx, recapTabRefs)}
-                      title={`Switch to ${tab.label} (${countInfo?.total || 0} words)`}
+                      title={`Switch to ${tab.label} (${unitText})`}
                     >
                       <span className="cat-icon" aria-hidden="true">{tab.icon}</span>
                       <span className="cat-label">{tab.label}</span>
