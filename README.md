@@ -39,6 +39,15 @@
 
 ---
 
+## Built with Google Antigravity & Gemini
+
+This project is actively developed and architected using **Google Antigravity** paired with **Google Gemini / Advanced Agentic AI**.
+
+- **Agentic Pair Programming**: Used Antigravity's autonomous multi-step workflows to build and audit the French curriculum and accent-forgiving quiz engine, harden security headers and RLS schemas, configure Vitest suites, and manage continuous deployment.
+- **Architectural Velocity**: Demonstrates AI-accelerated software engineering while maintaining strict TypeScript type safety, test coverage, and security standards.
+
+---
+
 ## Quick Start
 
 ```bash
