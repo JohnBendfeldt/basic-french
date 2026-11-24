@@ -25,6 +25,10 @@ describe('Basic French App Shell', () => {
     const footerHubLink = screen.getByRole('link', { name: /^Basic Language School$/i });
     expect(footerHubLink).toHaveAttribute('href', 'https://basiclanguage.school');
 
+    const footerAuthorLink = screen.getByRole('link', { name: /^John Bendfeldt$/i });
+    expect(footerAuthorLink).toHaveAttribute('href', 'https://johnbendfeldt.com');
+    expect(footerAuthorLink).toHaveAttribute('rel', 'noopener noreferrer author');
+
     const footerGithubLink = screen.getByRole('link', { name: /^GitHub$/i });
     expect(footerGithubLink).toHaveAttribute('href', 'https://github.com/JohnBendfeldt/basic-french');
     expect(footerGithubLink).toHaveAttribute('rel', 'noopener noreferrer');

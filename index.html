@@ -17,6 +17,8 @@
     <title>Basic French | Free Online French for Beginners</title>
     <meta name="description" content="Learn basic French online for free. Master the French alphabet, essential phrases, numbers &amp; telling time, and vocabulary with studio neural audio and quizzes." />
     <meta name="keywords" content="basic french, learn french online, free french, french for beginners, french alphabet, french pronunciation, basic french phrases, french numbers, telling time in french, french vocabulary, free french lessons, basicfrench.org" />
+    <meta name="author" content="John Bendfeldt" />
+    <link rel="author" href="https://johnbendfeldt.com/" />
     <link rel="canonical" href="https://basicfrench.org/" />
 
     <!-- Open Graph (Facebook, LinkedIn, etc.) -->
@@ -54,11 +56,24 @@
       "@context": "https://schema.org",
       "@graph": [
         {
+          "@type": "Person",
+          "@id": "https://johnbendfeldt.com/#person",
+          "name": "John Bendfeldt",
+          "url": "https://johnbendfeldt.com/",
+          "sameAs": [
+            "https://github.com/JohnBendfeldt",
+            "https://www.linkedin.com/in/johnbendfeldt"
+          ]
+        },
+        {
           "@type": "EducationalOrganization",
           "@id": "https://basiclanguage.school/#organization",
           "name": "Basic Language School",
           "url": "https://basiclanguage.school/",
           "logo": "https://basiclanguage.school/logo512.png",
+          "founder": {
+            "@id": "https://johnbendfeldt.com/#person"
+          },
           "sameAs": [
             "https://basicenglish.school/",
             "https://basicfrench.org/",
@@ -75,6 +90,9 @@
           "url": "https://basicfrench.org/",
           "description": "Free interactive French phonetics, phrases, numbers, telling time, vocabulary, and quiz web app for beginners.",
           "inLanguage": ["en", "fr"],
+          "author": {
+            "@id": "https://johnbendfeldt.com/#person"
+          },
           "publisher": {
             "@id": "https://basiclanguage.school/#organization"
           }
@@ -92,6 +110,12 @@
           "browserRequirements": "Requires JavaScript",
           "inLanguage": ["en", "fr"],
           "isAccessibleForFree": true,
+          "author": {
+            "@id": "https://johnbendfeldt.com/#person"
+          },
+          "creator": {
+            "@id": "https://johnbendfeldt.com/#person"
+          },
           "provider": {
             "@id": "https://basiclanguage.school/#organization"
           },
@@ -126,6 +150,9 @@
           "educationalLevel": "Beginner",
           "teaches": "French phonetics, pronunciation, essential phrases, numbers, telling time, and core vocabulary",
           "isAccessibleForFree": true,
+          "creator": {
+            "@id": "https://johnbendfeldt.com/#person"
+          },
           "provider": {
             "@id": "https://basiclanguage.school/#organization"
           },
@@ -151,7 +178,7 @@
       <p>
         Learn basic French online for free at basicfrench.org. Study the French alphabet,
         essential phrases, numbers &amp; time, common words, and pronunciation with interactive
-        exercises and studio neural audio. Please enable JavaScript to use the full app.
+        exercises and studio neural audio. Created by <a href="https://johnbendfeldt.com/" rel="author">John Bendfeldt</a>. Please enable JavaScript to use the full app.
       </p>
       <nav aria-label="Lessons and resources">
         <ul>
